@@ -362,7 +362,7 @@ marray<- function(CH, n_occ){
 
 #' Construct m-ij array with weighted probability
 #'
-#' @param CH Input file made by format_dat() function.
+#' @param CH Input file made by \code{format_dat()} function.
 #' @param n_occ Total detection events including the trawl.
 #' @return m-ij array
 #' @details It needs pre-assigned weights to calculate weighted m-ij. If all weights are the same, the results are the same as the unweighted m-ij.

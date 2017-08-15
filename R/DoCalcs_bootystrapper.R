@@ -16,7 +16,7 @@ roundT <- function(x, ...){
 #------------------------------------------------------------------------------
 #90%,95% non parametric CI function similar to the old bootstrap program [[modified order, 7-24-2013 JET]]
 # get.CIs <- function(data){
-# 
+#
 #             result <- data.frame(0,0,0,0,0,0,0,0,0,0)
 #             names(result) <- c("initial", "np_90cill", "np_90ciul", "boots_avg", "boots_std",
 #                                 "cv", "p_90cill", "p_90ciul", "np_95cill", "np_95ciul")
@@ -39,16 +39,16 @@ get.CIs <- function(data){
                      "boots_std", "cv", "p_90cill", "p_90ciul",
                      "np_95cill", "np_95ciul")
   result$initial    <- data[1]
-  result$np_90cill  <- quantile(data, 0.05)
-  result$np_90ciul  <- quantile(data, 0.95)
-  result$boots_avg  <- mean(data[-1])
-  result$boots_std  <- sqrt(var(data[-1])*(n-1)/n) # pop'n sd
+  result$np_90cill  <- quantile(data, 0.05, na.rm= TRUE)
+  result$np_90ciul  <- quantile(data, 0.95, na.rm= TRUE)
+  result$boots_avg  <- mean(data[-1], na.rm= TRUE)
+  result$boots_std  <- sqrt(var(data[-1], na.rm= TRUE)*(n-1)/n) # pop'n sd
   result$cv         <- result$boots_std/result$boots_avg
   result$p_90cill   <- result$boots_avg - 1.645*result$boots_std
   result$p_90ciul   <- result$boots_avg + 1.645*result$boots_std
-  result$np_95cill  <- quantile(data, 0.025)
-  result$np_95ciul  <- quantile(data, 0.975)
-  
+  result$np_95cill  <- quantile(data, 0.025, na.rm= TRUE)
+  result$np_95ciul  <- quantile(data, 0.975, na.rm= TRUE)
+
   return(result)
 }
 fill.CIs <- function(data){

@@ -5,10 +5,13 @@ Version: 0.1.0
 Author: bobby Hsu
 Maintainer: bobby Hsu <bobbyhsu@fpc.org>
 Description: Automates the bootstrapping process for FPC biologists.
-    The package contains functions that upload and format input data files,
-    calculate parameter estimates, process bootstrap loops, and convert estimates
-    for output (DoCalc() originally by Jack Tuomikoski).
-    There is also a function which simulates fake data (for testing).
+    The package contains the following functions:
+    format_dat()- upload and format input data files,
+    surv_calc()- calculate parameter estimates, 
+    bootystrapper()- process bootstrap loops, 
+    DoCalcs()/DoCalcs_uc()- convert estimates and calculate CSS parameters for output. 
+    siml_cjs()- simulates fake detection history based on parameters values given.
+    DoCalcs() originally by Jack Tuomikoski.
 License: Unlimited
 Encoding: UTF-8
 LazyData: none

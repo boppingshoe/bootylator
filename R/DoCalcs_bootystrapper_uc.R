@@ -16,20 +16,20 @@
 #                               WSID=CUTTHROAT;
 #                               DATABASE=CSSOUTPUT;
 #                               Network=DBMSSOCN")
-# 
+#
 # #target<-'HCH 2011 WSPH'
 # tables<-sqlQuery(channel, paste("select * from sys.tables where name like " , "'%", target, "%'", " order by name asc", sep=""))
 # tables$name
-# 
+#
 # crtnm<-factor(tables$name[1])
 # #rnm<-factor(tables$name[2])
 # #tnm<-factor(tables$name[3])
-# 
+#
 # crtfile<-sqlFetch(channel, crtnm, colnames = FALSE, rownames = TRUE)
 # #tfile<-sqlFetch(channel, tnm, colnames = FALSE, rownames = TRUE)
 # #rfile<-sqlFetch(channel, rnm, colnames = FALSE, rownames = TRUE)
-# 
-# 
+#
+#
 # crt<-crtfile
 # #t<-tfile
 # #r<-rfile
@@ -41,7 +41,7 @@
 #this function rounds things in similar way to Excel and I think Foxpro
 #by default, R has it's own rounding method that is different from the other two
 doCalcs_uc <- function(crt, ...){
-  
+
 roundT <- function(x, ...){
   if(is.null(names(list(...)))){
   ans <- floor(x + 0.5)   }else{
@@ -60,19 +60,19 @@ get.CIs <- function(data){
   n<- length(data)- 1
   result <- data.frame(0,0,0,0,0,0,0,0,0,0)
   names(result) <- c("initial", "np_90cill", "np_90ciul", "boots_avg",
-                     "boots_std", "cv", "p_90cill", "p_90ciul",
-                     "np_95cill", "np_95ciul")
+    "boots_std", "cv", "p_90cill", "p_90ciul",
+    "np_95cill", "np_95ciul")
   result$initial    <- data[1]
-  result$np_90cill  <- quantile(data, 0.05)
-  result$np_90ciul  <- quantile(data, 0.95)
-  result$boots_avg  <- mean(data[-1])
-  result$boots_std  <- sqrt(var(data[-1])*(n-1)/n) # pop'n sd
+  result$np_90cill  <- quantile(data, 0.05, na.rm= TRUE)
+  result$np_90ciul  <- quantile(data, 0.95, na.rm= TRUE)
+  result$boots_avg  <- mean(data[-1], na.rm= TRUE)
+  result$boots_std  <- sqrt(var(data[-1], na.rm= TRUE)*(n-1)/n) # pop'n sd
   result$cv         <- result$boots_std/result$boots_avg
   result$p_90cill   <- result$boots_avg - 1.645*result$boots_std
   result$p_90ciul   <- result$boots_avg + 1.645*result$boots_std
-  result$np_95cill  <- quantile(data, 0.025)
-  result$np_95ciul  <- quantile(data, 0.975)
-  
+  result$np_95cill  <- quantile(data, 0.025, na.rm= TRUE)
+  result$np_95ciul  <- quantile(data, 0.975, na.rm= TRUE)
+
   return(result)
 }
 fill.CIs <- function(data){
@@ -189,7 +189,7 @@ ans <- cbind(parm, ansDF)
 #             'clipboard',
 #             col.names = T, row.names = F, sep = ',',
 #             quote = F)
-# 
+#
 # # save to sql server CSS report
 # channel3 <- odbcDriverConnect("case=nochange;
 #                               Description=CSSREPORT;
