@@ -1,6 +1,30 @@
 
-# data simulation for single release, diff surv for int and seg groups
-siml_cjs<- function(big_phi, big_p, mrkd, remv, n_occ, intgr, segr){
+#' data simulation for single release, diff surv for int and seg groups
+#'
+#' @param big_phi Set reach survivals.
+#' @param big_p Set detection probabilities for each reach.
+#' @param mrkd Indicates amount of fish released.
+#' @param remv Indicates the portion of fish removed (transported or died).
+#' @param n_occ Number of events/detection.
+#' @param intgr portion of 'intergrated group.'
+#' @param segr portion of 'segregated group.' intgr + segr = 1.
+#' @param adu_rtn adult return rate.
+#' @return simulated detection history and adult counts. Bootstrap ready.
+#' @examples
+#' n_occ<- 8
+#' mrkd<- 50000
+#' phi_real<- rep(0.8, n_occ-1) # set survival
+#' p_real<- rep(0.45, n_occ-1) # set detection
+#' remv<- 0.01 # portion removed at occ 2 and 3
+#' intgr<- 0.23
+#' segr<- 0.77
+#' adu_rtn<- 0.02
+#' big_phi<- matrix(phi_real, ncol= n_occ-1, nrow= mrkd)
+#' big_p<- matrix(p_real, ncol= n_occ-1, nrow= mrkd)
+#' 
+#' ch<- siml_cjs(big_phi, big_p, mrkd, remv, n_occ, intgr, segr, adu_rtn)
+#'
+siml_cjs<- function(big_phi, big_p, mrkd, remv, n_occ, intgr, segr, adu_rtn){
   n_occ<- dim(big_phi)[2]+1
   CH<- as.data.frame(matrix(0, ncol= n_occ, nrow= mrkd))
   colnames(CH)<- c('rel','grj','goj','lmj','mcj','jdj','bon','twx')
@@ -26,22 +50,51 @@ siml_cjs<- function(big_phi, big_p, mrkd, remv, n_occ, intgr, segr){
       if(CH[i,t]==2|CH[i,t]==3) break
     } # observed fate at t for fish i
     if(sur==0) next
-    adu<- rbinom(1, 1, 0.02) # x% adult return (for all)
+    adu<- rbinom(1, 1, adu_rtn) # x% adult return (for all)
     #ifelse(sum(CH[i,2:n_occ])==0, adu<- rbinom(1,1,0.05), adu<- rbinom(1,1,0.01))
-    ifelse(adu==1, CH$age[i]<- sample(c(0,1,2), size=1, prob=c(0.09,0.38,0.53)),
-           CH$age[i]<- NA) # assign age
+    ifelse(adu==1, CH$age_boa[i]<- sample(c(0,1,2,3), size=1, 
+      prob=c(0.26, 0.34, 0.39, 0.01)), CH$age_boa[i]<- NA) # assign age
+    ifelse(adu==1&!is.na(CH$age_boa), CH$age_rtn[i]<- sample(c(NA,0,1,2,3), size=1, 
+      prob=c(0.49, 0.01, 0.22, 0.27, 0.01)), CH$age_rtn[i]<- NA) # assign age
   } # fish i
-  CH$ac0<- ifelse(rowSums(CH[,2:4])==0 & CH$age>1, 1, 0)
-  CH$ac0j<- ifelse(rowSums(CH[,2:4])==0 & CH$age>0, 1, 0)
-  CH$ac1<- ifelse((CH[,2]==1|CH[,3]==1|CH[,4]==1)&
-                    CH[,2]!=2& CH[,3]!=2& CH[,4]!=2&
-                    CH[,2]!=3& CH[,3]!=3& CH[,4]!=3& CH$age>1, 1, 0)
-  CH$ac1j<- ifelse((CH[,2]==1|CH[,3]==1|CH[,4]==1)&
-                     CH[,2]!=2& CH[,3]!=2& CH[,4]!=2&
-                     CH[,2]!=3& CH[,3]!=3& CH[,4]!=3& CH$age>0, 1, 0)
-  CH$atx<- ifelse((CH[,2]==2|CH[,3]==2|CH[,4]==2)& CH$age>1, 1, 0)
-  CH$atxj<- ifelse((CH[,2]==2|CH[,3]==2|CH[,4]==2)& CH$age>0, 1, 0)
-  CH$c0type<- ifelse(rowSums(CH[,2:4])==0, 1, 0)
+  # tallying using the corrected data set ----
+  # adult counts using age_rtn
+  CH$ac0_rtn<- ifelse(CH[,2]==0& CH[,3]==0& CH[,4]==0& CH$age_rtn>1, 1, 0)
+  CH$ac0j_rtn<- ifelse(CH[,2]==0& CH[,3]==0& CH[,4]==0& CH$age_rtn>0, 1, 0)
+  
+  CH$ac1_rtn<- ifelse((CH[,2]==1|CH[,3]==1|CH[,4]==1)&
+      CH[,2]!=2& CH[,3]!=2& CH[,4]!=2&
+      CH[,2]!=3& CH[,3]!=3& CH[,4]!=3&
+      CH$age_rtn>1, 1, 0)
+  CH$ac1j_rtn<- ifelse((CH[,2]==1|CH[,3]==1|CH[,4]==1)&
+      CH[,2]!=2& CH[,3]!=2& CH[,4]!=2&
+      CH[,2]!=3& CH[,3]!=3& CH[,4]!=3&
+      CH$age_rtn>0, 1, 0)
+  
+  CH$atx_rtn<- ifelse((CH[,2]==2|CH[,3]==2|CH[,4]==2)& CH$age_rtn>1, 1, 0)
+  CH$atxj_rtn<- ifelse((CH[,2]==2|CH[,3]==2|CH[,4]==2)& CH$age_rtn>0, 1, 0)
+  
+  CH$at0_rtn<- ifelse((CH[,2]==2|CH[,2]==0)& (CH[,3]==2|CH[,3]==0)
+    & (CH[,4]==2|CH[,4]==0)& CH$age_rtn>1, 1, 0)
+  CH$at0j_rtn<- ifelse((CH[,2]==2|CH[,2]==0)& (CH[,3]==2|CH[,3]==0)
+    & (CH[,4]==2|CH[,4]==0)& CH$age_rtn>0, 1, 0)
+  # adult counts age_boa
+  CH$ac0_boa<- ifelse(CH[,2]==0& CH[,3]==0& CH[,4]==0& CH$age_boa>1, 1, 0)
+  CH$ac0j_boa<- ifelse(CH[,2]==0& CH[,3]==0& CH[,4]==0& CH$age_boa>0, 1, 0)
+  
+  CH$ac1_boa<- ifelse((CH[,2]==1|CH[,3]==1|CH[,4]==1)& CH$age_boa>1, 1, 0)
+  CH$ac1j_boa<- ifelse((CH[,2]==1|CH[,3]==1|CH[,4]==1)& CH$age_boa>0, 1, 0)
+  
+  CH$atx_boa<- ifelse((CH[,2]==2|CH[,3]==2|CH[,4]==2)& CH$age_boa>1, 1, 0)
+  CH$atxj_boa<- ifelse((CH[,2]==2|CH[,3]==2|CH[,4]==2)& CH$age_boa>0, 1, 0)
+  
+  CH$at0_boa<- ifelse((CH[,2]==2|CH[,2]==0)& (CH[,3]==2|CH[,3]==0)
+    & (CH[,4]==2|CH[,4]==0)& CH$age_boa>1, 1, 0)
+  CH$at0j_boa<- ifelse((CH[,2]==2|CH[,2]==0)& (CH[,3]==2|CH[,3]==0)
+    & (CH[,4]==2|CH[,4]==0)& CH$age_boa>0, 1, 0)
+  
+  CH$c0type<- 0
+  CH$c0type[CH[,2]==0& CH[,3]==0& CH[,4]==0]<- 1
   CH$d2<- ifelse(CH[,2]==2|CH[,2]==3, 1, 0)
   CH$d3<- ifelse(CH[,3]==2|CH[,3]==3, 1, 0)
   CH$d4<- ifelse(CH[,4]==2|CH[,4]==3, 1, 0)
@@ -51,6 +104,7 @@ siml_cjs<- function(big_phi, big_p, mrkd, remv, n_occ, intgr, segr){
   CH$d51<- ifelse(CH$c0type==0& CH[,5]==2|CH[,5]==3, 1, 0)
   CH$d61<- ifelse(CH$c0type==0& CH[,6]==2|CH[,6]==3, 1, 0)
   CH$d71<- ifelse(CH$c0type==0& CH[,7]==2|CH[,7]==3, 1, 0)
+  # ----
   
   return(CH)
 }
