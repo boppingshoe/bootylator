@@ -2,7 +2,7 @@
 % Please edit documentation in R/booty_utility.R
 \name{format_dat}
 \alias{format_dat}
-\title{Import and format data for ready surv_calc}
+\title{Import and format data for ready to use by \code{surv_calc()}}
 \usage{
 format_dat(file_name, wgt)
 }
@@ -15,7 +15,7 @@ format_dat(file_name, wgt)
 Capture history and indicators for adult return.
 }
 \description{
-Import and format data for ready surv_calc
+Import and format data for ready to use by \code{surv_calc()}
 }
 \examples{
 detect_data<- format_dat('C:/Users/bobbyhsu/Documents/Temp/SR HCH 2014 MCCA.csv', wgt='n')

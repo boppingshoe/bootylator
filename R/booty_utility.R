@@ -147,6 +147,7 @@ format_dat<- function(file_name, wgt){
 #' @param i Iteration number used by the bootstrap function \code{bootystrapper()}.
 #' @param wt Indicates whether to weight the sampling probability.
 #' @param wt_i Indicates whether to calculate the original estimates using weighted probability.
+#' @param phi_p_pnly 'y' if only want to calculate survivals and detection rates.
 #' @return Survivals, detection and returing adult counts
 #' @examples
 #' for(i in 1:10){
@@ -154,7 +155,7 @@ format_dat<- function(file_name, wgt){
 #' }
 #' results
 #'
-surv_calc<- function(ch, i, nocc, wt, wt_i){
+surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, ...){
   # breakdown of int_t, int_r, seg_t, and seg_r ----
   # if comment out, make sure change the output in 'bootystrapper()'
   if(wt=='y') tnr<- unlist(tapply(ch$group, ch$brood, table))
@@ -183,6 +184,14 @@ surv_calc<- function(ch, i, nocc, wt, wt_i){
   if (any(r==0)) {
     M<- z*(R+1)/(r+1) + m[1:(nocc-1)] # finite population correction
   } else M<- z*(R)/(r) + m[1:(nocc-1)]
+
+  phi<- M[2:(nocc-1)]/(M[1:(nocc-2)] - m[1:(nocc-2)] + R[1:(nocc-2)])
+  p  <- m[2:(nocc-1)]/M[2:(nocc-1)]
+  if(phi_p_only=='y') {
+    calc<- cbind(t(phi), t(p))
+    return(calc)
+    stop()
+  }
   # ----
 
   # output params
@@ -196,9 +205,6 @@ surv_calc<- function(ch, i, nocc, wt, wt_i){
   m12<- sim_mary[1,2]
   m13<- sim_mary[1,3]
   m14<- sim_mary[1,4]
-
-  phi<- M[2:(nocc-1)]/(M[1:(nocc-2)] - m[1:(nocc-2)] + R[1:(nocc-2)])
-  p  <- m[2:(nocc-1)]/M[2:(nocc-1)]
   # ----
   # params from t group ----
   R1t<- sum(ch$group=='T') # t group
@@ -280,10 +286,10 @@ surv_calc<- function(ch, i, nocc, wt, wt_i){
 #' out<- bootystrapper(detect_data, surv_calc, iter=100, n_occ=8, wgt='n', wgt_init='n')
 #' head(out)
 #'
-bootystrapper <- function(d, fn, iter, n_occ, wgt, wgt_init){
+bootystrapper <- function(d, fn, iter, n_occ, wgt, wgt_init, phi_p_only='n', ...){
   start_time<- Sys.time()
 
-  original <- fn(d, i=1, n_occ, wgt, wgt_init) #run function on original data
+  original <- fn(d, i=1, n_occ, wgt, wgt_init, phi_p_only) #run function on original data
   #make an output matrix with NA's
   out <- matrix(data=NA, nrow=(iter+1),ncol=length(original))
   # first row name is original
@@ -302,7 +308,7 @@ bootystrapper <- function(d, fn, iter, n_occ, wgt, wgt_init){
     # build resampled data from sample.index
     sample_data <- d[sample_index,]
     # run function on resampled data
-    out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init)
+    out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only)
     # print booty progress
     # if ((i-1) %in% seq(0,iter, by=50)) cat(i-1, ' ')
     setTxtProgressBar(pb, i)
@@ -311,15 +317,15 @@ bootystrapper <- function(d, fn, iter, n_occ, wgt, wgt_init){
   close(pb)
   out <- as.data.frame(out)
 
-  if(wgt=='y') {
-    colnames(out) <- c('phi1', 'phi2', 'phi3', 'phi4', 'phi5', 'phi6', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'AD_R', 'AD_T', 'CW_R', 'CW_T')
-  } else if(n_occ== 4) {
-    colnames(out) <- c('phi1', 'phi2', 'p2', 'p3', 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn')
-  } else if(n_occ==6) {
-    colnames(out) <- c('phi1', 'phi2', 'phi3', 'phi4', 'p2', 'p3', 'p4', 'p5', 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn')
-  } else {
-    colnames(out) <- c('phi1', 'phi2', 'phi3', 'phi4', 'phi5', 'phi6', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'R group', 'T group')
-    } # n_occ= 8 and not weighted
+  if(phi_p_only== 'y') {
+    colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)))
+  } else if(wgt== 'y') {
+    colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'AD_R', 'AD_T', 'CW_R', 'CW_T')
+  } else if(n_occ== 8) { # n_occ= 8 and not weighted
+    colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'R group', 'T group')
+  } else { # n_occ= 4 or 6
+    colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn')
+  }
 
   cat('\n')
   print(Sys.time()- start_time)
