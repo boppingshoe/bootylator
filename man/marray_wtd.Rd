@@ -7,7 +7,7 @@
 marray_wtd(CH, n_occ)
 }
 \arguments{
-\item{CH}{Input file made by format_dat() function.}
+\item{CH}{Input file made by \code{format_dat()} function.}
 
 \item{n_occ}{Total detection events including the trawl.}
 }
