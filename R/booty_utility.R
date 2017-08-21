@@ -155,7 +155,7 @@ format_dat<- function(file_name, wgt){
 #' }
 #' results
 #'
-surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc...){
+surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, ...){
   # breakdown of int_t, int_r, seg_t, and seg_r ----
   # if comment out, make sure change the output in 'bootystrapper()'
   if(wt=='y') tnr<- unlist(tapply(ch$group, ch$brood, table))
@@ -174,7 +174,7 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc...){
   }
   R<- sim_mary[1:(nocc-1), 1]
   r<- sim_mary[1:(nocc-1), (nocc+1)]
-  if (fpc='y' & any(r==0)) {
+  if (fpc=='y' & any(r==0)) {
     M<- z*(R+1)/(r+1) + m[1:(nocc-1)] # finite population correction
   } else M<- z*(R)/(r) + m[1:(nocc-1)]
 
