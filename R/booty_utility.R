@@ -155,7 +155,7 @@ format_dat<- function(file_name, wgt){
 #' }
 #' results
 #'
-surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, ...){
+surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc...){
   # breakdown of int_t, int_r, seg_t, and seg_r ----
   # if comment out, make sure change the output in 'bootystrapper()'
   if(wt=='y') tnr<- unlist(tapply(ch$group, ch$brood, table))
@@ -168,20 +168,13 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, ...){
   } else {sim_mary<- marray(ch, nocc)}
   # elements needed for estimating phi's and p's ----
   m<- c(0, colSums(sim_mary[, 2:nocc]))
-  # if(nocc==4) {z<- c(0, sum(sim_mary[1, 3:nocc]), sum(sim_mary[1:2, 4]))}
-  # if(nocc==6) {z<- c(0, sum(sim_mary[1, 3:nocc]), sum(sim_mary[1:2, 4:nocc]),
-  #                   sum(sim_mary[1:3, 5:nocc]), sum(sim_mary[1:4, 6]))}
-  # if(nocc==8) {z<- c(0, sum(sim_mary[1, 3:nocc]), sum(sim_mary[1:2, 4:nocc]),
-  #                   sum(sim_mary[1:3, 5:nocc]), sum(sim_mary[1:4, 6:nocc]),
-  #                   sum(sim_mary[1:5, 7:nocc]), sum(sim_mary[1:6, nocc]))}
-
   z<- rep(0, (nocc-1))
   for (i in 1:(nocc-2)){
     z[i+1]<- sum(sim_mary[1:i,(i+2):nocc])
   }
   R<- sim_mary[1:(nocc-1), 1]
   r<- sim_mary[1:(nocc-1), (nocc+1)]
-  if (any(r==0)) {
+  if (fpc='y' & any(r==0)) {
     M<- z*(R+1)/(r+1) + m[1:(nocc-1)] # finite population correction
   } else M<- z*(R)/(r) + m[1:(nocc-1)]
 
@@ -286,10 +279,10 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, ...){
 #' out<- bootystrapper(detect_data, surv_calc, iter=100, n_occ=8, wgt='n', wgt_init='n')
 #' head(out)
 #'
-bootystrapper <- function(d, fn, iter, n_occ, wgt, wgt_init, phi_p_only='n', ...){
+bootystrapper <- function(d, fn, iter, n_occ, wgt, wgt_init, phi_p_only='n', fpc='y', ...){
   start_time<- Sys.time()
 
-  original <- fn(d, i=1, n_occ, wgt, wgt_init, phi_p_only) #run function on original data
+  original <- fn(d, i=1, n_occ, wgt, wgt_init, phi_p_only, fpc) #run function on original data
   #make an output matrix with NA's
   out <- matrix(data=NA, nrow=(iter+1),ncol=length(original))
   # first row name is original
@@ -308,7 +301,7 @@ bootystrapper <- function(d, fn, iter, n_occ, wgt, wgt_init, phi_p_only='n', ...
     # build resampled data from sample.index
     sample_data <- d[sample_index,]
     # run function on resampled data
-    out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only)
+    out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only, fpc)
     # print booty progress
     # if ((i-1) %in% seq(0,iter, by=50)) cat(i-1, ' ')
     setTxtProgressBar(pb, i)
