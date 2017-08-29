@@ -200,11 +200,11 @@ vc_cjs_0expan   <- (s2_cjs * s3_cjs * s4_cjs * s5_cjs * s6_cjs)
 vc_cjs_1expan   <- (s2_cjs * s3_cjs * s4_cjs * s5_cjs)^(285.9/216.4)
 vc_cjs_2expan   <- (s2_cjs * s3_cjs * s4_cjs)^(285.9/139.8)
 vc_cjs_3expan   <- (s2_cjs * s3_cjs)^(285.9/65.86)
-vc_jda_01expan  <- (s2_cjs * s3_cjs * s4_cjs * s5_cjs)
-vc_jda_2expan   <- (s2_cjs * s3_cjs * s4_cjs ) ^ (216.4/139.8)
-vc_jda_3expan   <- (s2_cjs * s3_cjs ) ^ (216.4/65.86)
-vc_mcn_012expan <- (s2_cjs * s3_cjs * s4_cjs)
-vc_mcn_3expan   <- (s2_cjs * s3_cjs) ^ (139.8/65.86)
+# vc_jda_01expan  <- (s2_cjs * s3_cjs * s4_cjs * s5_cjs)
+# vc_jda_2expan   <- (s2_cjs * s3_cjs * s4_cjs ) ^ (216.4/139.8)
+# vc_jda_3expan   <- (s2_cjs * s3_cjs ) ^ (216.4/65.86)
+# vc_mcn_012expan <- (s2_cjs * s3_cjs * s4_cjs)
+# vc_mcn_3expan   <- (s2_cjs * s3_cjs) ^ (139.8/65.86)
 # ----
 
 # Barge survival for smolts --------

@@ -31,7 +31,8 @@ format_dat<- function(file_name, wgt){
     fdat[,t]<- as.numeric(substr(yomama$burnham, t,t))
   }
   fdat[,n_occ]<- ifelse(yomama$twx=='',0,1) # adding TWX as the last detection
-  if(n_occ==8) colnames(fdat)<- c('rel','grj','goj','lmj','mcj','jdj','bon','twx')
+  colnames(fdat)<- paste0('occ',1:n_occ)
+  # if(n_occ==8) colnames(fdat)<- c('rel','grj','goj','lmj','mcj','jdj','bon','twx')
   # ----
 
   # add columns before original order is altered ----
