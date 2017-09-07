@@ -84,15 +84,18 @@ fill.CIs <- function(data){
             }
 
 #load up the needed pieces------------------------------------------------------
+nocc<- sum(grepl('phi', names(crt)))
 s1_cjs    <- crt$phi1
 s2_cjs    <- crt$phi2
 if('phi3' %in% names(crt)) {s3_cjs<- crt$phi3} else {s3_cjs<- (rep(0, 1001))}
 if('phi4' %in% names(crt)) {s4_cjs<- crt$phi4} else {s4_cjs<- (rep(0, 1001))}
+if('phi5' %in% names(crt)) {s5_cjs<- crt$phi5} else {s5_cjs<- (rep(0, 1001))}
 # s4_cjs    <- crt$phi4
 p2        <- crt$p2
 p3        <- crt$p3
 if('p4' %in% names(crt)){p4<- crt$p4} else {p4<- (rep(0, 1001))}
 if('p5' %in% names(crt)){p5<- crt$p5} else {p5<- (rep(0, 1001))}
+if('p6' %in% names(crt)){p6<- crt$p6} else {p6<- (rep(0, 1001))}
 r1        <- crt$R1
 
 totaladult_b<- round((crt$C0adult_t_boa + crt$C1adult_boa + crt$Txadult_boa),0)
@@ -126,14 +129,15 @@ S1 <- get.CIs(s1_cjs)
 if('phi2' %in% names(crt)) {S2<- get.CIs(s2_cjs)} else {S2 <- get.CIs(rep(0, 1001))}
 if('phi3' %in% names(crt)) {S3<- get.CIs(crt$phi3)} else {S3 <- get.CIs(rep(0, 1001))}
 if('phi4' %in% names(crt)) {S4<- get.CIs(crt$phi4)} else {S4 <- get.CIs(rep(0, 1001))}
+if('phi5' %in% names(crt)) {S5<- get.CIs(crt$phi5)} else {S5 <- get.CIs(rep(0, 1001))}
 
-if('phi3' %in% names(crt)) {SR<- get.CIs(s2_cjs*s3_cjs*s4_cjs)}
-else {SR<- get.CIs(s2_cjs)}
+SR<- apply(crt[grep('phi', names(crt))][-1], 1, prod)
 R1<- get.CIs(r1)
 p2<- get.CIs(p2)
 if('p3' %in% names(crt)){p3<- get.CIs(p3)} else {p3 <- get.CIs(rep(0, 1001))}
 if('p4' %in% names(crt)){p4<- get.CIs(p4)} else {p4 <- get.CIs(rep(0, 1001))}
 if('p5' %in% names(crt)){p5<- get.CIs(p5)} else {p5 <- get.CIs(rep(0, 1001))}
+if('p6' %in% names(crt)){p6<- get.CIs(p6)} else {p6 <- get.CIs(rep(0, 1001))}
 
 popula_cjs<- get.CIs(r1 * s1_cjs)
 adults_b<- get.CIs(totaladult_b)
@@ -161,14 +165,20 @@ adults_mj<- get.CIs(totaladult_mj)
 #choose parameters:
 parm <- c(
           #general stuff for evaluation; has various reach survival versions
-          'S1', 'S2', 'S3', 'S4', 'SR', 'R1'
-          ,'p2', 'p3', 'p4','p5', 'popula_cjs'
+          # 'S1', 'S2', 'S3', 'S4', 'SR', 'R1'
+          paste0('S', 1:nocc)
+          , 'SR', 'R1'
+          , paste0('p', 2:(nocc+1))
+          , 'popula_cjs'
+          #,'p2', 'p3', 'p4','p5', 'popula_cjs'
 
           ,'adults_b','adults_bj'
           ,'adults_m','adults_mj'
 
           #overall SARs
-          ,'releaseSAR_b','releaseSAR_bj','overallSAR_b', 'overallSAR_bj','releaseSAR_m','overallSAR_m', 'overallSAR_mj')
+          ,'releaseSAR_b','releaseSAR_bj','overallSAR_b', 'overallSAR_bj'
+          ,'releaseSAR_m','overallSAR_m', 'overallSAR_mj'
+  )
 #
 #
 ansDF <- get(parm[1])

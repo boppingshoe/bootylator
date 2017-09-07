@@ -11,7 +11,8 @@ format_dat<- function(file_name, wgt){
   # importing data files and select the wanted columns ----
   # the 'burnham' here is actually the capture_di from the original data file
   yomama_in<- read.csv(file=file_name)#, na.strings= c('','NA'))
-  yomama <- subset(yomama_in, , c(1,4,16,17,18,23, grep('flag', names(yomama_in))))
+  # yomama <- subset(yomama_in, , c(1,4,16,17,18,23, grep('flag', names(yomama_in))))
+  yomama <- subset(yomama_in, , c(1,4,16,grep('BOA', names(yomama_in))[1],ifelse(grepl('BOA', names(yomama_in)[18]), 17, 18),23, grep('flag', names(yomama_in))))
   n_col<- ncol(yomama)
   if(n_col==6) {
     names(yomama)<- c("tagId","burnham","twx","boa","return","relDate")
@@ -28,9 +29,10 @@ format_dat<- function(file_name, wgt){
   fdat<- as.data.frame(matrix(0, nrow=nrow(yomama), ncol=n_occ))
   fdat[,1]<- 1
   for(t in 2:(n_occ-1)){
-    fdat[,t]<- as.numeric(substr(yomama$burnham, t,t))
+    fdat[,t]<- as.numeric(substr(yomama$burnham, t, t))
   }
-  fdat[,n_occ]<- ifelse(yomama$twx=='',0,1) # adding TWX as the last detection
+  # adding TWX as the last detection
+  fdat[,n_occ]<- ifelse(yomama$twx==''|is.na(yomama$twx), 0, 1)
   colnames(fdat)<- paste0('occ',1:n_occ)
   # if(n_occ==8) colnames(fdat)<- c('rel','grj','goj','lmj','mcj','jdj','bon','twx')
   # ----
