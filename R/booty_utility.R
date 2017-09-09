@@ -38,7 +38,7 @@ format_dat<- function(file_name, wgt){
   # ----
 
   # add columns before original order is altered ----
-  fdat$burnham<- yomama$burnham
+  fdat$burnham<- apply(fdat[,1:n_occ], 1 , function(x) paste0(x, collapse=''))
   fdat$tagId<- yomama$tagId
   fdat$group<- yomama$group
 
@@ -65,29 +65,23 @@ format_dat<- function(file_name, wgt){
   # correct records with detection after 2 or 3 ----
   # (order will be altered after correction)
   correct<- function(x){
-    pos<- which(x[1:n_occ]==x[length(x)])[1]
+    pos<- which(x[1:n_occ]==2|x[1:n_occ]==3)[1]
     x[(pos+1):n_occ]<- 0
-    return(x[-length(x)])
-  }
-  numr<- function(tmp) as.numeric(as.character(tmp))
-
-  badId3<- fdat[grep('[3]', fdat$burnham), 'tagId']
-  if (length(badId3)>0){
-    tmp3<- apply(cbind(subset(fdat, tagId%in%badId3, 1:n_occ), 3), 1, correct)
-    tmp3<- as.data.frame(cbind(t(tmp3), subset(fdat, tagId%in%badId3,
-                                               (n_occ+1):ncol(fdat)) ))
-    tmp3[,1:n_occ]<- apply(tmp3[,1:n_occ], 2, numr)
-    fdat<- rbind( tmp3, subset(fdat,!(tagId%in%badId3)) )
+    return(x)
   }
 
-  badId2<- fdat[grep('[2]', fdat$burnham), 'tagId']
-  badId2<- subset(badId2, !(badId2 %in% badId3))
-  if (length(badId2)>0){
-    tmp2<- apply(cbind(subset(fdat, tagId%in%badId2, 1:n_occ), 2), 1, correct)
-    tmp2<- as.data.frame(cbind(t(tmp2), subset(fdat, tagId%in%badId2,
-                                               (n_occ+1):ncol(fdat)) ))
-    tmp2[,1:n_occ]<- apply(tmp2[,1:n_occ], 2, numr)
-    fdat<- rbind( tmp2, subset(fdat,!(tagId%in%badId2)) )
+  tempset<- fdat[grep('[23]', fdat$burnham),]
+  if(nrow(tempset)>0){
+    posi<- apply(tempset[,1:n_occ], 1, function(x) grep('[23]', x)[1])
+
+    badId23<- tempset[grepl('[123]', substr(tempset$burnham, posi+1, n_occ)), 'tagId']
+    badId23<- badId23[!is.na(badId23)]
+    tmp23<- apply(subset(fdat, tagId%in%badId23, 1:n_occ), 1, correct)
+    tmp23<- as.data.frame(cbind(t(tmp23), subset(fdat, tagId%in%badId23,
+      (n_occ+1):ncol(fdat)) ))
+    fdat<- rbind( tmp23, subset(fdat,!(tagId%in%badId23)) )
+    toshow<- readline(prompt=paste('I found', length(badId23), 'questionable fish. Would you like to see the list (y/shush)? '))
+    if(toshow=='y') print(subset(fdat, tagId%in%badId23, c(1:n_occ,burnham, tagId, group, relDate)))
   }
   # ----
 
@@ -140,7 +134,7 @@ format_dat<- function(file_name, wgt){
   fdat$d71<- ifelse(fdat$c0type==0& fdat[,7]==2|fdat[,7]==3, 1, 0)
   # ----
 
-  return(fdat)
+    return(fdat)
 }
 
 
@@ -210,11 +204,14 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, ...){
   # m14t<- nrow(subset(ch, group=='T'& ch[,2]==0& goj==0& lmj!=0))
 
   cht<- subset(ch, group=='T')
-  x_t<- cbind(nrow(cht[cht[,2]==2,]), nrow(cht[cht[,3]==2,]),
-              nrow(cht[cht[,4]==2,]), nrow(cht[cht[,5]==2,])) # t group
-  x_0<- cbind(nrow(cht[cht[,2]==0&cht[,3]==2,]),
-              nrow(cht[cht[,2:3]==0&cht[,4]==2,]),
-              nrow(cht[cht[,2:4]==0&cht[,5]==2,])) # t group
+  # x_t<- cbind(nrow(cht[cht[,2]==2&rowSums(cht[,3:n_occ])==0,]),
+  x_t<- cbind(nrow(cht[cht[,2]==2,]),
+    nrow(cht[cht[,3]==2,]),
+    nrow(cht[cht[,4]==2,]),
+    nrow(cht[cht[,5]==2,])) # t group
+  x_0<- cbind(nrow(cht[cht[,2]==0 & cht[,3]==2,]),
+              nrow(cht[cht[,2:3]==0 & cht[,4]==2,]),
+              nrow(cht[cht[,2:4]==0 & cht[,5]==2,])) # t group
   d234t<- colSums (cbind(cht$d2, cht$d3, cht$d4)) # t group
   d5671t<- colSums (cbind(cht$d51, cht$d61, cht$d71)) # t group
 
