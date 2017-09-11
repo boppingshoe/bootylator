@@ -76,12 +76,14 @@ format_dat<- function(file_name, wgt){
 
     badId23<- tempset[grepl('[123]', substr(tempset$burnham, posi+1, n_occ)), 'tagId']
     badId23<- badId23[!is.na(badId23)]
-    tmp23<- apply(subset(fdat, tagId%in%badId23, 1:n_occ), 1, correct)
-    tmp23<- as.data.frame(cbind(t(tmp23), subset(fdat, tagId%in%badId23,
-      (n_occ+1):ncol(fdat)) ))
-    fdat<- rbind( tmp23, subset(fdat,!(tagId%in%badId23)) )
-    toshow<- readline(prompt=paste('I found', length(badId23), 'questionable fish. Would you like to see the list (y/shush)? '))
-    if(toshow=='y') print(subset(fdat, tagId%in%badId23, c(1:n_occ,burnham, tagId, group, relDate)))
+    if(length(badId23)>0){
+      tmp23<- apply(subset(fdat, tagId%in%badId23, 1:n_occ), 1, correct)
+      tmp23<- as.data.frame(cbind(t(tmp23), subset(fdat, tagId%in%badId23,
+        (n_occ+1):ncol(fdat)) ))
+      fdat<- rbind( tmp23, subset(fdat,!(tagId%in%badId23)) )
+      toshow<- readline(prompt=paste('I found', length(badId23), 'questionable fish. Would you like to see the list (y/shush)? '))
+      if(toshow=='y') print(subset(fdat, tagId%in%badId23, c(1:n_occ,burnham, tagId, group, relDate)))
+    }
   }
   # ----
 
@@ -99,13 +101,24 @@ format_dat<- function(file_name, wgt){
                            fdat[,2]!=3& fdat[,3]!=3& fdat[,4]!=3&
                            fdat$age_rtn>0, 1, 0)
 
-  fdat$atx_rtn<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)& fdat$age_rtn>1, 1, 0)
-  fdat$atxj_rtn<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)& fdat$age_rtn>0, 1, 0)
+  fdat$atx_rtn<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)&
+      substr(fdat$burnham,2,(n_occ-1))==
+      apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
+      fdat$age_rtn>1, 1, 0)
+  fdat$atxj_rtn<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)&
+      substr(fdat$burnham,2,(n_occ-1))==
+      apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
+      fdat$age_rtn>0, 1, 0)
 
-  fdat$at0_rtn<- ifelse((fdat[,2]==2|fdat[,2]==0)& (fdat[,3]==2|fdat[,3]==0)
-                    & (fdat[,4]==2|fdat[,4]==0)& fdat$age_rtn>1, 1, 0)
-  fdat$at0j_rtn<- ifelse((fdat[,2]==2|fdat[,2]==0)& (fdat[,3]==2|fdat[,3]==0)
-                     & (fdat[,4]==2|fdat[,4]==0)& fdat$age_rtn>0, 1, 0)
+  fdat$at0_rtn<- ifelse((fdat[,2]==2|fdat[,2]==0)& (fdat[,3]==2|fdat[,3]==0)&
+      (fdat[,4]==2|fdat[,4]==0)&
+      substr(fdat$burnham,2,(n_occ-1))==
+      apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
+      fdat$age_rtn>1, 1, 0)
+  fdat$at0j_rtn<- ifelse((fdat[,2]==2|fdat[,2]==0)& (fdat[,3]==2|fdat[,3]==0)&
+      substr(fdat$burnham,2,(n_occ-1))==
+      apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
+      (fdat[,4]==2|fdat[,4]==0)& fdat$age_rtn>0, 1, 0)
   # adult counts using BOA_OBS (aka 'boa')
   fdat$ac0_boa<- ifelse(fdat[,2]==0& fdat[,3]==0& fdat[,4]==0& fdat$age_boa>1, 1, 0)
   fdat$ac0j_boa<- ifelse(fdat[,2]==0& fdat[,3]==0& fdat[,4]==0& fdat$age_boa>0, 1, 0)
@@ -113,13 +126,24 @@ format_dat<- function(file_name, wgt){
   fdat$ac1_boa<- ifelse((fdat[,2]==1|fdat[,3]==1|fdat[,4]==1)& fdat$age_boa>1, 1, 0)
   fdat$ac1j_boa<- ifelse((fdat[,2]==1|fdat[,3]==1|fdat[,4]==1)& fdat$age_boa>0, 1, 0)
 
-  fdat$atx_boa<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)& fdat$age_boa>1, 1, 0)
-  fdat$atxj_boa<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)& fdat$age_boa>0, 1, 0)
+  fdat$atx_boa<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)&
+      substr(fdat$burnham,2,(n_occ-1))==
+      apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
+      fdat$age_boa>1, 1, 0)
+  fdat$atxj_boa<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)&
+      substr(fdat$burnham,2,(n_occ-1))==
+      apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
+      fdat$age_boa>0, 1, 0)
 
-  fdat$at0_boa<- ifelse((fdat[,2]==2|fdat[,2]==0)& (fdat[,3]==2|fdat[,3]==0)
-                        & (fdat[,4]==2|fdat[,4]==0)& fdat$age_boa>1, 1, 0)
-  fdat$at0j_boa<- ifelse((fdat[,2]==2|fdat[,2]==0)& (fdat[,3]==2|fdat[,3]==0)
-                         & (fdat[,4]==2|fdat[,4]==0)& fdat$age_boa>0, 1, 0)
+  fdat$at0_boa<- ifelse((fdat[,2]==2|fdat[,2]==0)& (fdat[,3]==2|fdat[,3]==0)&
+      (fdat[,4]==2|fdat[,4]==0)&
+      substr(fdat$burnham,2,(n_occ-1))==
+      apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
+      fdat$age_boa>1, 1, 0)
+  fdat$at0j_boa<- ifelse((fdat[,2]==2|fdat[,2]==0)& (fdat[,3]==2|fdat[,3]==0)&
+      substr(fdat$burnham,2,(n_occ-1))==
+      apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
+      (fdat[,4]==2|fdat[,4]==0)& fdat$age_boa>0, 1, 0)
 
   fdat$c0type<- 0
   fdat$c0type[fdat[,2]==0& fdat[,3]==0& fdat[,4]==0]<- 1
@@ -204,40 +228,39 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, ...){
   # m14t<- nrow(subset(ch, group=='T'& ch[,2]==0& goj==0& lmj!=0))
 
   cht<- subset(ch, group=='T')
-  # x_t<- cbind(nrow(cht[cht[,2]==2&rowSums(cht[,3:n_occ])==0,]),
-  x_t<- cbind(nrow(cht[cht[,2]==2,]),
-    nrow(cht[cht[,3]==2,]),
-    nrow(cht[cht[,4]==2,]),
-    nrow(cht[cht[,5]==2,])) # t group
+  x_t<- cbind(nrow(cht[cht[,2]==2 & as.numeric(substr(cht$burnham,3,nocc-1))==0,]),
+    nrow(cht[cht[,3]==2 & as.numeric(substr(cht$burnham,4,nocc-1))==0,]),
+    nrow(cht[cht[,4]==2 & as.numeric(substr(cht$burnham,5,nocc-1))==0,]),
+    nrow(cht[cht[,5]==2 & as.numeric(substr(cht$burnham,6,nocc-1))==0,])) # t group
   x_0<- cbind(nrow(cht[cht[,2]==0 & cht[,3]==2,]),
               nrow(cht[cht[,2:3]==0 & cht[,4]==2,]),
               nrow(cht[cht[,2:4]==0 & cht[,5]==2,])) # t group
   d234t<- colSums (cbind(cht$d2, cht$d3, cht$d4)) # t group
   d5671t<- colSums (cbind(cht$d51, cht$d61, cht$d71)) # t group
 
-  c0at_rtn <- sum(ch[ch$group=='T', 'ac0_rtn'], na.rm=TRUE)  # t group
-  c0ajt_rtn<- sum(ch[ch$group=='T', 'ac0j_rtn'], na.rm=TRUE) #
-  c1at_rtn <- sum(ch[ch$group=='T', 'ac1_rtn'], na.rm=TRUE)  #
-  c1ajt_rtn<- sum(ch[ch$group=='T', 'ac1j_rtn'], na.rm=TRUE) #
-  txat_rtn <- sum(ch[ch$group=='T', 'atx_rtn'], na.rm=TRUE)  #
-  txajt_rtn<- sum(ch[ch$group=='T', 'atxj_rtn'], na.rm=TRUE) #
-  t0at_rtn <- sum(ch[ch$group=='T', 'at0_rtn'], na.rm=TRUE)  #
-  t0ajt_rtn<- sum(ch[ch$group=='T', 'at0j_rtn'], na.rm=TRUE) #
-  c0at_boa <- sum(ch[ch$group=='T', 'ac0_boa'], na.rm=TRUE)  #
-  c0ajt_boa<- sum(ch[ch$group=='T', 'ac0j_boa'], na.rm=TRUE) #
-  c1at_boa <- sum(ch[ch$group=='T', 'ac1_boa'], na.rm=TRUE)  #
-  c1ajt_boa<- sum(ch[ch$group=='T', 'ac1j_boa'], na.rm=TRUE) #
-  txat_boa <- sum(ch[ch$group=='T', 'atx_boa'], na.rm=TRUE)  #
-  txajt_boa<- sum(ch[ch$group=='T', 'atxj_boa'], na.rm=TRUE) #
-  t0at_boa <- sum(ch[ch$group=='T', 'at0_boa'], na.rm=TRUE)  #
-  t0ajt_boa<- sum(ch[ch$group=='T', 'at0j_boa'], na.rm=TRUE) #
+  c0at_rtn <- sum(cht[, 'ac0_rtn'], na.rm=TRUE)  # t group
+  c0ajt_rtn<- sum(cht[, 'ac0j_rtn'], na.rm=TRUE) #
+  c1at_rtn <- sum(cht[, 'ac1_rtn'], na.rm=TRUE)  #
+  c1ajt_rtn<- sum(cht[, 'ac1j_rtn'], na.rm=TRUE) #
+  txat_rtn <- sum(cht[, 'atx_rtn'], na.rm=TRUE)  #
+  txajt_rtn<- sum(cht[, 'atxj_rtn'], na.rm=TRUE) #
+  t0at_rtn <- sum(cht[, 'at0_rtn'], na.rm=TRUE)  #
+  t0ajt_rtn<- sum(cht[, 'at0j_rtn'], na.rm=TRUE) #
+  c0at_boa <- sum(cht[, 'ac0_boa'], na.rm=TRUE)  #
+  c0ajt_boa<- sum(cht[, 'ac0j_boa'], na.rm=TRUE) #
+  c1at_boa <- sum(cht[, 'ac1_boa'], na.rm=TRUE)  #
+  c1ajt_boa<- sum(cht[, 'ac1j_boa'], na.rm=TRUE) #
+  txat_boa <- sum(cht[, 'atx_boa'], na.rm=TRUE)  #
+  txajt_boa<- sum(cht[, 'atxj_boa'], na.rm=TRUE) #
+  t0at_boa <- sum(cht[, 'at0_boa'], na.rm=TRUE)  #
+  t0ajt_boa<- sum(cht[, 'at0j_boa'], na.rm=TRUE) #
 
-  lgr_atx_rtn<-  sum(ch[ch$group=='T'& ch[,2]==2, 'atx_rtn'], na.rm=TRUE)   # t group
-  lgs_atx_rtn<-  sum(ch[ch$group=='T'& ch[,3]==2, 'atx_rtn'], na.rm=TRUE)   #
-  lmn_atx_rtn<-  sum(ch[ch$group=='T'& ch[,4]==2, 'atx_rtn'], na.rm=TRUE)   #
-  lgr_atxj_rtn<- sum(ch[ch$group=='T'& ch[,2]==2, 'atxj_rtn'], na.rm=TRUE)  #
-  lgs_atxj_rtn<- sum(ch[ch$group=='T'& ch[,3]==2, 'atxj_rtn'], na.rm=TRUE)  #
-  lmn_atxj_rtn<- sum(ch[ch$group=='T'& ch[,4]==2, 'atxj_rtn'], na.rm=TRUE)  #
+  lgr_atx_rtn<-  sum(cht[cht[,2]==2, 'atx_rtn'], na.rm=TRUE)   # t group
+  lgs_atx_rtn<-  sum(cht[cht[,3]==2, 'atx_rtn'], na.rm=TRUE)   #
+  lmn_atx_rtn<-  sum(cht[cht[,4]==2, 'atx_rtn'], na.rm=TRUE)   #
+  lgr_atxj_rtn<- sum(cht[cht[,2]==2, 'atxj_rtn'], na.rm=TRUE)  #
+  lgs_atxj_rtn<- sum(cht[cht[,3]==2, 'atxj_rtn'], na.rm=TRUE)  #
+  lmn_atxj_rtn<- sum(cht[cht[,4]==2, 'atxj_rtn'], na.rm=TRUE)  #
   # ----
 
   if(length(tnr)==1) {
