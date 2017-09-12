@@ -11,6 +11,10 @@ format_dat<- function(file_name, wgt){
   # importing data files and select the wanted columns ----
   # the 'burnham' here is actually the capture_di from the original data file
   yomama_in<- read.csv(file=file_name)#, na.strings= c('','NA'))
+  if(names(yomama_in)[1]!='tag_id') {
+    yomama_in<- read.csv(file=file_name, header = FALSE)
+    names(yomama_in)<- c('tag_id',	'burnham_hi',	'length',	'capture_di',	'mort',	'transport',	'GRJ_OBS',	'GRX_OBS',	'GOJ_OBS',	'LMJ_OBS',	'ICH_OBS',	'MCJ_OBS',	'JDJ_OBS',	'BON_OBS',	'MCA_OBS',	'TWX_OBS',	'BOA_OBS',	'GRA_OBS',	'srrt',	'tag_site',	'rel_site',	'coord_id',	'rel_date',	'river_km',	'migr_yr',	'flag',	'tag_date',	'tag_file',	'wt',	'flags',	'tag_rem')
+  }
   # yomama <- subset(yomama_in, , c(1,4,16,17,18,23, grep('flag', names(yomama_in))))
   yomama <- subset(yomama_in, , c(1,4,16,grep('BOA', names(yomama_in))[1],ifelse(grepl('BOA', names(yomama_in)[18]), 17, 18),23, grep('flag', names(yomama_in))))
   n_col<- ncol(yomama)
@@ -45,6 +49,10 @@ format_dat<- function(file_name, wgt){
   if(wgt=='y'){
     trim.trailing <- function (x) sub("\\s+$", "", x)
     fdat$brood<- trim.trailing(yomama$brood)
+    cw<- as.numeric(readline(prompt = 'Integrated: '))
+    ad<- as.numeric(readline(prompt = 'Segregated: '))
+    intgr<- cw/(cw+ad)
+    segr<- ad/(cw+ad)
     fdat$prob<- ifelse(fdat$brood=='CW', intgr/sum(fdat$brood=='CW'),
                           segr/sum(fdat$brood=='AD'))
   } else fdat$prob<- 1/nrow(fdat)
@@ -54,12 +62,14 @@ format_dat<- function(file_name, wgt){
   yomama$return[grepl("^ *$",yomama$return)]<- NA
   fdat$boa<- as.Date(substr(yomama$boa, 1,10))
   fdat$return<- as.Date(substr(yomama$return, 1,10))
+  # grab migration year from file name
+  migyr<- as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))
   # age calculated using BOA_OBS (here is named 'boa')
-  fdat$age_boa<- as.numeric(format(fdat$boa, '%Y'))-
-    as.numeric(format(fdat$relDate, '%Y'))
+  fdat$age_boa<- as.numeric(format(fdat$boa, '%Y'))- migyr
+    # as.numeric(format(fdat$relDate, '%Y'))
   # age calculated using GRA_OBS, MCN_OBS, or BOA_OBS2 (here is named 'return')
-  fdat$age_rtn<- as.numeric(format(fdat$return, '%Y'))-
-    as.numeric(format(fdat$relDate, '%Y'))
+  fdat$age_rtn<- as.numeric(format(fdat$return, '%Y'))- migyr
+    # as.numeric(format(fdat$relDate, '%Y'))
   # ----
 
   # correct records with detection after 2 or 3 ----
@@ -123,8 +133,14 @@ format_dat<- function(file_name, wgt){
   fdat$ac0_boa<- ifelse(fdat[,2]==0& fdat[,3]==0& fdat[,4]==0& fdat$age_boa>1, 1, 0)
   fdat$ac0j_boa<- ifelse(fdat[,2]==0& fdat[,3]==0& fdat[,4]==0& fdat$age_boa>0, 1, 0)
 
-  fdat$ac1_boa<- ifelse((fdat[,2]==1|fdat[,3]==1|fdat[,4]==1)& fdat$age_boa>1, 1, 0)
-  fdat$ac1j_boa<- ifelse((fdat[,2]==1|fdat[,3]==1|fdat[,4]==1)& fdat$age_boa>0, 1, 0)
+  fdat$ac1_boa<- ifelse((fdat[,2]==1|fdat[,3]==1|fdat[,4]==1)&
+      fdat[,2]!=2& fdat[,3]!=2& fdat[,4]!=2&
+      fdat[,2]!=3& fdat[,3]!=3& fdat[,4]!=3&
+      fdat$age_boa>1, 1, 0)
+  fdat$ac1j_boa<- ifelse((fdat[,2]==1|fdat[,3]==1|fdat[,4]==1)&
+      fdat[,2]!=2& fdat[,3]!=2& fdat[,4]!=2&
+      fdat[,2]!=3& fdat[,3]!=3& fdat[,4]!=3&
+      fdat$age_boa>0, 1, 0)
 
   fdat$atx_boa<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)&
       substr(fdat$burnham,2,(n_occ-1))==

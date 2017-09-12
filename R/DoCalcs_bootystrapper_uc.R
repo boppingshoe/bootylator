@@ -155,12 +155,6 @@ overallSAR_mj<- get.CIs(sar_tws_cr_mj) * 100
 
 #McNpop       <- get.CIs(popula_cjs)
 
-adults_b<- get.CIs(totaladult_b)
-adults_bj<- get.CIs(totaladult_bj)
-adults_m<- get.CIs(totaladult_m)
-adults_mj<- get.CIs(totaladult_mj)
-
-
 #wrangle format and output------------------------------------------------------
 #choose parameters:
 parm <- c(
