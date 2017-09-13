@@ -92,7 +92,7 @@ format_dat<- function(file_name, wgt){
         (n_occ+1):ncol(fdat)) ))
       fdat<- rbind( tmp23, subset(fdat,!(tagId%in%badId23)) )
       toshow<- readline(prompt=paste('I found', length(badId23), 'questionable fish. Would you like to see the list (y/shush)? '))
-      if(toshow=='y') print(subset(fdat, tagId%in%badId23, c(1:n_occ,burnham, tagId, group, relDate)))
+      if(toshow=='y') print(subset(fdat, tagId%in%badId23, c(1:n_occ,burnham, tagId, group, relDate)), max.print=1e+06)
     }
   }
   # ----
@@ -166,12 +166,12 @@ format_dat<- function(file_name, wgt){
   fdat$d2<- ifelse(fdat[,2]==2|fdat[,2]==3, 1, 0)
   fdat$d3<- ifelse(fdat[,3]==2|fdat[,3]==3, 1, 0)
   fdat$d4<- ifelse(fdat[,4]==2|fdat[,4]==3, 1, 0)
-  fdat$d50<- ifelse(fdat$c0type==1& fdat[,5]==2|fdat[,5]==3, 1, 0)
-  fdat$d60<- ifelse(fdat$c0type==1& fdat[,6]==2|fdat[,6]==3, 1, 0)
-  fdat$d70<- ifelse(fdat$c0type==1& fdat[,7]==2|fdat[,7]==3, 1, 0)
-  fdat$d51<- ifelse(fdat$c0type==0& fdat[,5]==2|fdat[,5]==3, 1, 0)
-  fdat$d61<- ifelse(fdat$c0type==0& fdat[,6]==2|fdat[,6]==3, 1, 0)
-  fdat$d71<- ifelse(fdat$c0type==0& fdat[,7]==2|fdat[,7]==3, 1, 0)
+  fdat$d50<- ifelse(fdat$c0type==1& (fdat[,5]==2|fdat[,5]==3), 1, 0)
+  fdat$d60<- ifelse(fdat$c0type==1& (fdat[,6]==2|fdat[,6]==3), 1, 0)
+  fdat$d70<- ifelse(fdat$c0type==1& (fdat[,7]==2|fdat[,7]==3), 1, 0)
+  fdat$d51<- ifelse(fdat$c0type==0& (fdat[,5]==2|fdat[,5]==3), 1, 0)
+  fdat$d61<- ifelse(fdat$c0type==0& (fdat[,6]==2|fdat[,6]==3), 1, 0)
+  fdat$d71<- ifelse(fdat$c0type==0& (fdat[,7]==2|fdat[,7]==3), 1, 0)
   # ----
 
     return(fdat)
@@ -244,13 +244,21 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, ...){
   # m14t<- nrow(subset(ch, group=='T'& ch[,2]==0& goj==0& lmj!=0))
 
   cht<- subset(ch, group=='T')
-  x_t<- cbind(nrow(cht[cht[,2]==2 & as.numeric(substr(cht$burnham,3,nocc-1))==0,]),
-    nrow(cht[cht[,3]==2 & as.numeric(substr(cht$burnham,4,nocc-1))==0,]),
-    nrow(cht[cht[,4]==2 & as.numeric(substr(cht$burnham,5,nocc-1))==0,]),
-    nrow(cht[cht[,5]==2 & as.numeric(substr(cht$burnham,6,nocc-1))==0,])) # t group
+  # x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0)),
+  #   nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0)),
+  #   nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0)),
+  #   nrow(subset(cht, occ5==2 & as.numeric(substr(burnham,6,nocc-1))==0))) # t group
+
+  # BT4 doesn't count smolt that went down adult ladders
+  # do this to match BT4 counts
+  x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
+    nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
+    nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
+    nrow(subset(cht, occ5==2 & as.numeric(substr(burnham,6,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn))))) # t group
+
   x_0<- cbind(nrow(cht[cht[,2]==0 & cht[,3]==2,]),
-              nrow(cht[cht[,2:3]==0 & cht[,4]==2,]),
-              nrow(cht[cht[,2:4]==0 & cht[,5]==2,])) # t group
+            nrow(cht[cht[,2:3]==0 & cht[,4]==2,]),
+            nrow(cht[cht[,2:4]==0 & cht[,5]==2,])) # t group
   d234t<- colSums (cbind(cht$d2, cht$d3, cht$d4)) # t group
   d5671t<- colSums (cbind(cht$d51, cht$d61, cht$d71)) # t group
 
