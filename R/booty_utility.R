@@ -120,15 +120,16 @@ format_dat<- function(file_name, wgt){
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
       fdat$age_rtn>0, 1, 0)
 
-  fdat$at0_rtn<- ifelse((fdat[,2]==2|fdat[,2]==0)& (fdat[,3]==2|fdat[,3]==0)&
-      (fdat[,4]==2|fdat[,4]==0)&
+  fdat$at0_rtn<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2) &
+      fdat[,2]!=1 & fdat[,3]!=1 & fdat[,4]!=1 &
       substr(fdat$burnham,2,(n_occ-1))==
-      apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
+      apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = '')) &
       fdat$age_rtn>1, 1, 0)
-  fdat$at0j_rtn<- ifelse((fdat[,2]==2|fdat[,2]==0)& (fdat[,3]==2|fdat[,3]==0)&
+  fdat$at0j_rtn<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2) &
+      fdat[,2]!=1 & fdat[,3]!=1 & fdat[,4]!=1 &
       substr(fdat$burnham,2,(n_occ-1))==
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
-      (fdat[,4]==2|fdat[,4]==0)& fdat$age_rtn>0, 1, 0)
+      fdat$age_rtn>0, 1, 0)
   # adult counts using BOA_OBS (aka 'boa')
   fdat$ac0_boa<- ifelse(fdat[,2]==0& fdat[,3]==0& fdat[,4]==0& fdat$age_boa>1, 1, 0)
   fdat$ac0j_boa<- ifelse(fdat[,2]==0& fdat[,3]==0& fdat[,4]==0& fdat$age_boa>0, 1, 0)
@@ -151,15 +152,16 @@ format_dat<- function(file_name, wgt){
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
       fdat$age_boa>0, 1, 0)
 
-  fdat$at0_boa<- ifelse((fdat[,2]==2|fdat[,2]==0)& (fdat[,3]==2|fdat[,3]==0)&
-      (fdat[,4]==2|fdat[,4]==0)&
+  fdat$at0_boa<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2) &
+      fdat[,2]!=1 & fdat[,3]!=1 & fdat[,4]!=1 &
       substr(fdat$burnham,2,(n_occ-1))==
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
       fdat$age_boa>1, 1, 0)
-  fdat$at0j_boa<- ifelse((fdat[,2]==2|fdat[,2]==0)& (fdat[,3]==2|fdat[,3]==0)&
+  fdat$at0j_boa<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2) &
+      fdat[,2]!=1 & fdat[,3]!=1 & fdat[,4]!=1 &
       substr(fdat$burnham,2,(n_occ-1))==
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
-      (fdat[,4]==2|fdat[,4]==0)& fdat$age_boa>0, 1, 0)
+      fdat$age_boa>0, 1, 0)
 
   fdat$c0type<- 0
   fdat$c0type[fdat[,2]==0& fdat[,3]==0& fdat[,4]==0]<- 1
@@ -244,21 +246,21 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, ...){
   # m14t<- nrow(subset(ch, group=='T'& ch[,2]==0& goj==0& lmj!=0))
 
   cht<- subset(ch, group=='T')
-  # x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0)),
-  #   nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0)),
-  #   nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0)),
-  #   nrow(subset(cht, occ5==2 & as.numeric(substr(burnham,6,nocc-1))==0))) # t group
+  x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0)),
+    nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0)),
+    nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0)),
+    nrow(subset(cht, occ5==2 & as.numeric(substr(burnham,6,nocc-1))==0))) # t group
 
   # BT4 doesn't count smolt that went down adult ladders
   # do this to match BT4 counts
-  x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
-    nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
-    nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
-    nrow(subset(cht, occ5==2 & as.numeric(substr(burnham,6,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn))))) # t group
+  # x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
+  #   nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
+  #   nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
+  #   nrow(subset(cht, occ5==2 & as.numeric(substr(burnham,6,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn))))) # t group
 
   x_0<- cbind(nrow(cht[cht[,2]==0 & cht[,3]==2,]),
-            nrow(cht[cht[,2:3]==0 & cht[,4]==2,]),
-            nrow(cht[cht[,2:4]==0 & cht[,5]==2,])) # t group
+            nrow(cht[as.numeric(substr(cht$burnham,2,3))==0 & cht[,4]==2,]),
+            nrow(cht[as.numeric(substr(cht$burnham,2,4))==0 & cht[,5]==2,])) # t group
   d234t<- colSums (cbind(cht$d2, cht$d3, cht$d4)) # t group
   d5671t<- colSums (cbind(cht$d51, cht$d61, cht$d71)) # t group
 
