@@ -66,10 +66,8 @@ format_dat<- function(file_name, wgt){
   migyr<- as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))
   # age calculated using BOA_OBS (here is named 'boa')
   fdat$age_boa<- as.numeric(format(fdat$boa, '%Y'))- migyr
-    # as.numeric(format(fdat$relDate, '%Y'))
   # age calculated using GRA_OBS, MCN_OBS, or BOA_OBS2 (here is named 'return')
   fdat$age_rtn<- as.numeric(format(fdat$return, '%Y'))- migyr
-    # as.numeric(format(fdat$relDate, '%Y'))
   # ----
 
   # correct records with detection after 2 or 3 ----
@@ -91,8 +89,14 @@ format_dat<- function(file_name, wgt){
       tmp23<- as.data.frame(cbind(t(tmp23), subset(fdat, tagId%in%badId23,
         (n_occ+1):ncol(fdat)) ))
       fdat<- rbind( tmp23, subset(fdat,!(tagId%in%badId23)) )
-      toshow<- readline(prompt=paste('I found', length(badId23), 'questionable fish. Would you like to see the list (y/shush)? '))
-      if(toshow=='y') print(subset(fdat, tagId%in%badId23, c(1:n_occ,burnham, tagId, group, relDate)), max.print=1e+06)
+
+      posi2<- apply(tmp23[,1:n_occ], 1, function(x) grep('[23]', x))
+      qnable<- tmp23[as.numeric(substr(tmp23$burnham, posi2+1, n_occ))!=1, ]
+
+      # toshow<- readline(prompt=paste('I found', length(badId23), 'questionable fish. Would you like to see the list (y/shush)? '))
+      # if(toshow=='y') print(subset(fdat, tagId%in%badId23, c(1:n_occ, burnham, tagId, group, relDate)), max.print=1e+06)
+      toshow<- readline(prompt=paste('I found', nrow(qnable), 'questionable fish. Would you like to see the list (y/shush)? '))
+      if(toshow=='y') print(qnable[, c(paste0('occ',1:n_occ), 'burnham', 'tagId', 'group', 'relDate')], max.print=1e+06)
     }
   }
   # ----
@@ -194,7 +198,7 @@ format_dat<- function(file_name, wgt){
 #' }
 #' results
 #'
-surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, ...){
+surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
   # breakdown of int_t, int_r, seg_t, and seg_r ----
   # if comment out, make sure change the output in 'bootystrapper()'
   if(wt=='y') tnr<- unlist(tapply(ch$group, ch$brood, table))
@@ -246,17 +250,19 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, ...){
   # m14t<- nrow(subset(ch, group=='T'& ch[,2]==0& goj==0& lmj!=0))
 
   cht<- subset(ch, group=='T')
-  x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0)),
-    nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0)),
-    nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0)),
-    nrow(subset(cht, occ5==2 & as.numeric(substr(burnham,6,nocc-1))==0))) # t group
-
-  # BT4 doesn't count smolt that went down adult ladders
-  # do this to match BT4 counts
-  # x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
-  #   nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
-  #   nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
-  #   nrow(subset(cht, occ5==2 & as.numeric(substr(burnham,6,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn))))) # t group
+  if(match_bt4=='n'){
+    x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0)),
+      nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0)),
+      nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0)),
+      ifelse(nocc>4, nrow(subset(cht, occ5==2 & as.numeric(substr(burnham,6,nocc-1))==0)), NA)) # t group
+  } else {
+    # BT4 doesn't count smolt that went down adult ladders at 'granite'
+    # do this to match BT4 counts
+    x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
+      nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
+      nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
+      ifelse(nocc>4, nrow(subset(cht, occ5==2 & as.numeric(substr(burnham,6,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))), NA)) # t group
+  }
 
   x_0<- cbind(nrow(cht[cht[,2]==0 & cht[,3]==2,]),
             nrow(cht[as.numeric(substr(cht$burnham,2,3))==0 & cht[,4]==2,]),
@@ -328,10 +334,10 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, ...){
 #' out<- bootystrapper(detect_data, surv_calc, iter=100, n_occ=8, wgt='n', wgt_init='n')
 #' head(out)
 #'
-bootystrapper <- function(d, fn, iter, n_occ, wgt, wgt_init, phi_p_only='n', fpc='y', ...){
+bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', match_bt4='n', ...){
   start_time<- Sys.time()
-
-  original <- fn(d, i=1, n_occ, wgt, wgt_init, phi_p_only, fpc) #run function on original data
+  n_occ<- sum(grepl('occ', names(d)))
+  original <- fn(d, i=1, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4) #run function on original data
   #make an output matrix with NA's
   out <- matrix(data=NA, nrow=(iter+1),ncol=length(original))
   # first row name is original
@@ -350,7 +356,7 @@ bootystrapper <- function(d, fn, iter, n_occ, wgt, wgt_init, phi_p_only='n', fpc
     # build resampled data from sample.index
     sample_data <- d[sample_index,]
     # run function on resampled data
-    out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only, fpc)
+    out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4)
     # print booty progress
     # if ((i-1) %in% seq(0,iter, by=50)) cat(i-1, ' ')
     setTxtProgressBar(pb, i)

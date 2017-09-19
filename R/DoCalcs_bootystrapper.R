@@ -9,29 +9,14 @@ roundT <- function(x, ...){
   return(ans)
 }
 
-#roundT(2.5); roundT(2.25, digits=1)
-##vs
-#round(2.5); round(2.25, digits=1)
+# R rounds to the nearest even number, roundT rounds up
+# roundT(2.5); roundT(2.25, digits=1)
+# vs.
+# round(2.5); round(2.25, digits=1)
 
-#------------------------------------------------------------------------------
-#90%,95% non parametric CI function similar to the old bootstrap program [[modified order, 7-24-2013 JET]]
-# get.CIs <- function(data){
-#
-#             result <- data.frame(0,0,0,0,0,0,0,0,0,0)
-#             names(result) <- c("initial", "np_90cill", "np_90ciul", "boots_avg", "boots_std",
-#                                 "cv", "p_90cill", "p_90ciul", "np_95cill", "np_95ciul")
-#             result$initial    <- data[1]
-#             result$np_90cill  <- sort(data[2:1001])[50]
-#             result$np_90ciul  <- sort(data[2:1001])[951]
-#             result$boots_avg  <- mean(data[2:1001])
-#             result$boots_std  <- sqrt((var(data[2:1001])*999)/1000)  ## this returns the population standard deviation
-#             result$cv         <- result$boots_std/result$boots_avg
-#             result$p_90cill   <- result$boots_avg  -  1.645*result$boots_std
-#             result$p_90ciul   <- result$boots_avg  +  1.645*result$boots_std
-#             result$np_95cill  <- sort(data[2:1001])[25]
-#             result$np_95ciul  <- sort(data[2:1001])[976]
-#             return(result)
-#             }
+# 90%,95% non parametric CI function similar to the old bootstrap program
+# [[modified order, 7-24-2013 JET]]
+
 get.CIs <- function(data){
   n<- length(data)- 1
   result <- data.frame(0,0,0,0,0,0,0,0,0,0)
@@ -57,7 +42,7 @@ fill.CIs <- function(data){
   return(result)
 }
 
-# load up the needed pieces -----------------------------------------------
+# load up the needed pieces ----
 s1_cjs    <- crt$phi1
 
 # This is not correct if s2 drifts above one, may need an s2mod field here
@@ -146,7 +131,7 @@ else {t0adults_b.<- round(crt$T0adult_boa,0)}
 if(species!= 'CH'){t1adults_b.<- round(crt$Txadultj_boa,0)}
 else {t1adults_b.<- round(crt$Txadult_boa,0)}
 
-c0adults_bj.  <- round(crt$C0adultj_t_boa,0)
+c0adults_bj. <- round(crt$C0adultj_t_boa,0)
 c1adults_bj. <- round(crt$C1adultj_boa,0)
 t0adults_bj. <- round(crt$T0adultj_boa,0)
 t1adults_bj. <- round(crt$Txadult_boa,0)
@@ -161,7 +146,6 @@ if(species!= 'CH') {totaladult_b.<- round((crt$C0adultj_t_boa + crt$C1adultj_boa
 else {totaladult_b.<- round((crt$C0adult_t_boa + crt$C1adult_boa + crt$Txadult_boa),0)}
 totaladult_bj.<- round((crt$C0adultj_t_boa + crt$C1adultj_boa + crt$Txadultj_boa),0)
 
-## not sure if correctly tallied these, see surv_calc() for details (8/9/2017)
 ## make sure for Tx SARs to LGS and LMM use the lgsadults2_gra and lmnadults2_gra for the X_1a2 and X_1aa2 seen or unseen above post-2005.
 if(species!= 'CH') {lgradults.<- round(crt$lgradultj_rtn,0)}
 else {lgradults.<- round(crt$lgradult_rtn,0)} # lgr_atx_rtn in surv_calc()
@@ -176,7 +160,7 @@ else{lmnadults.<- round(crt$lmnadult_rtn,0)}
 
 
 # survival calculations
-# juvenile survival -----------------------------------------------
+# juvenile survival ----
 if(reaches == 6){
   vc_mcn  <- s2_cjs * s3_cjs * s4_cjs
   vc_jda  <- s2_cjs * s3_cjs * s4_cjs * s5_cjs
@@ -209,7 +193,7 @@ vc_cjs_3expan   <- (s2_cjs * s3_cjs)^(285.9/65.86)
 
 # Barge survival for smolts --------
 # mechanically this is a harmonic mean
-#No rounding is added to match old bootstrap code
+# No rounding is added to match old bootstrap code
 vt_cjs_NEW <- 0.98 * (x12. + x1a2. + x1aa2.) /
                      (x12. +
                       x1a2. / s2_cjs +
@@ -221,8 +205,8 @@ vt_cjs_NEWMod <- 0.98 * (x12. + x1a2. + x1aa2.) /
                       x1aa2./(s2s3_cjsMod))
 # ----
 
-#Smolt populations ----------------------------------------------------------
-#LGR equivalent transported smolts
+# Smolt populations ----
+# LGR equivalent transported smolts
 tlgr_cjs     <- x12.
 tlgs_cjs     <- x102.   / s2_cjs
 tlmn_cjs     <- x1002.  / (s2_cjs * s3_cjs)
@@ -234,39 +218,38 @@ tmcn2_cjs    <- x1aaa2. / vc_mcn
 tlmn_cjsMod     <- x1002.  / (s2s3_cjsMod)
 tlmn2_cjsMod    <- x1aa2.  / (s2s3_cjsMod)
 
-#in-river removals summary
-#<<!!ROUNDED AS PER OLD BOOTSTRAP PROGRAM!!>>
+# in-river removals summary
+# <<ROUNDED AS PER OLD BOOTSTRAP PROGRAM!!>>
 delta0  <- roundT(delta5_0 / vc_mcn + delta6_0 / vc_jda + delta7_0 / vc_cjs)
 delta1  <- roundT(delta5_1. / vc_mcn + delta6_1. / vc_jda + delta7_1. / vc_cjs)
 # delta0  <- delta5_0 / vc_mcn + delta6_0 / vc_jda + delta7_0 / vc_cjs
 # delta1  <- delta5_1. / vc_mcn + delta6_1. / vc_jda + delta7_1. / vc_cjs
 
-#strangley, this smolt population is not rounded in the old bootstrap programs
-#doing similarly here to match
+# strangley, this smolt population is not rounded in the old bootstrap programs
+# doing similarly here to match
 popula_cjs  <- R1 * s1_cjs
 popula_cjs. <- R1.* s1_cjs
 
-###<<!!These Smolts ROUNDED AS PER OLD BOOTSTRAP PROGRAM!!>>
-#t0 smolts at LGR
+# <<These Smolts ROUNDED AS PER OLD BOOTSTRAP PROGRAM!!>>
+# t0 smolts at LGR
 t0_cjs      <- roundT(tlgr_cjs + tlgs_cjs  + tlmn_cjs)
 t0_cjsMod   <- roundT(tlgr_cjs + tlgs_cjs  + tlmn_cjsMod)
 # t0_cjs      <- tlgr_cjs + tlgs_cjs  + tlmn_cjs
 # t0_cjsMod   <- tlgr_cjs + tlgs_cjs  + tlmn_cjsMod
 
-#t1 smolts at LGR
+# t1 smolts at LGR
 t1_cjs      <- roundT(tlgr_cjs + tlgs2_cjs + tlmn2_cjs)
 t1_cjsMod   <- roundT(tlgr_cjs + tlgs2_cjs + tlmn2_cjsMod)
 # t1_cjs      <- tlgr_cjs + tlgs2_cjs + tlmn2_cjs
 # t1_cjsMod   <- tlgr_cjs + tlgs2_cjs + tlmn2_cjsMod
 
-#c0 smolts at LGR
+# c0 smolts at LGR
 c0_cjs      <- roundT(popula_cjs - m12 - m13 / s2_cjs - m14 /(s2_cjs * s3_cjs) - delta0)
 c0_cjsMod   <- roundT(popula_cjs - m12 - m13 / s2_cjs - m14 /(s2s3_cjsMod)     - delta0)
 # c0_cjs      <- popula_cjs - m12 - m13 / s2_cjs - m14 /(s2_cjs * s3_cjs) - delta0
 # c0_cjsMod   <- popula_cjs - m12 - m13 / s2_cjs - m14 /(s2s3_cjsMod)     - delta0
 
-
-#c1 smolts at LGR [[old]]
+# c1 smolts at LGR (old)
 # c1_cjs      <- roundT(m12. - delta2. + (m13. - delta3.) / s2_cjs + (m14. - delta4.) /(s2_cjs * s3_cjs) - delta1)
 # c1_cjsMod   <- roundT(m12. - delta2. + (m13. - delta3.) / s2_cjs + (m14. - delta4.) /(s2s3_cjsMod    ) - delta1)
 
@@ -278,67 +261,63 @@ c1_cjsNEWMod  <- roundT(R1. * s1_cjs * (p2 + (1-p2)*p3 + (1-p2)*(1-p3)*p4) -
 # c1_cjsNEWMod  <- R1. * s1_cjs * (p2 + (1-p2)*p3 + (1-p2)*(1-p3)*p4) - (delta2. + delta3./s2_cjs + delta4./s2s3_cjsMod + delta1)
 # ----
 
-#SAR, TIR, and D----------------------------------------------------------------
-#a.k.a. C0 SAR
+# SAR, TIR, and D ----
+# a.k.a. C0 SAR
 sar_c0_cjs   <- c0adults  / c0_cjs
 sar_c0_cjsMod<- c0adults  / c0_cjsMod
-#steelhead use 1 salt fish too
-#sar_c0_cjs_gj   <- c0adults_gj  / c0_cjs
+# steelhead use 1 salt fish too
+# sar_c0_cjs_gj   <- c0adults_gj  / c0_cjs
 
 
-#a.k.a. C1 SAR [[new version]]
+# a.k.a. C1 SAR [[new version]]
 sar_c1_cjs   <- c1adults.  / c1_cjsNEW
 sar_c1_cjsMod<- c1adults.  / c1_cjsNEWMod
 
-#a.k.a. T0 SAR
+# a.k.a. T0 SAR
 sart0cjsad   <- roundT(t0adults.  / t0_cjs   , digits = 6)
 sart0cjsadMod<- roundT(t0adults.  / t0_cjsMod, digits = 6)
 # sart0cjsad   <- t0adults.  / t0_cjs
 # sart0cjsadMod<- t0adults.  / t0_cjsMod
 
-#a.k.a. Tx SAR
+# a.k.a. Tx SAR
 sart1cjsad   <- roundT(t1adults.  / t1_cjs   , digits = 6) # txa
 sart1cjsadMod<- roundT(t1adults.  / t1_cjsMod, digits = 6)
 # sart1cjsad   <- t1adults.  / t1_cjs # txa
 # sart1cjsadMod<- t1adults.  / t1_cjsMod
 
-#a.k.a. TIR Tx / C0
+# a.k.a. TIR Tx / C0
 
 t1_c0_cjsu   <- sart1cjsad / sar_c0_cjs
 t1_c0_cjsuMod<- sart1cjsad / sar_c0_cjsMod
 
-#a.k.a. D Tx & C0
+# a.k.a. D Tx & C0
 d_tm1_cjsu   <- t1_c0_cjsu * (vc_cjs / vt_cjs_NEW)
 d_tm1_cjsuMod<- t1_c0_cjsu * (vc_cjs / vt_cjs_NEWMod)
 
-#overall SARs by location and with and without jacks
+# overall SARs by location and with and without jacks
 sar_tws_cr <- totaladult./(s1_cjs * R1.)
 sar_tws_cr_gj <- totaladult_gj./(s1_cjs * R1.)
 sar_tws_cr_b <-  totaladult_b./(s1_cjs * R1.)
 sar_tws_cr_bj <- totaladult_bj./(s1_cjs * R1.)
 # ----
 
-#NEW Proportions ----------------------------------------------------------------
-E.c0          <-  popula_cjs. * (1-p2) * (1-p3) * (1-p4)
-E.c1          <-  popula_cjs. * (p2 + (1 - p2) * p3
-                                    + (1 - p2) * (1 - p3) * p4)-
-                       (delta2. +
-                        delta3. /  s2_cjs +
-                        delta4. / (s2_cjs * s3_cjs))
-
+# NEW Proportions ----
+E.c0 <-  popula_cjs. * (1-p2) * (1-p3) * (1-p4)
+E.c1 <-  popula_cjs. * (p2 + (1 - p2) * p3 + (1 - p2) * (1 - p3) * p4)-
+                       (delta2. + delta3. /  s2_cjs + delta4. / (s2_cjs * s3_cjs))
 
 pr_trans_new  <-  t1_cjs    / (E.c0 + t1_cjs + E.c1)
 pr_c0_new     <-  E.c0      / (E.c0 + t1_cjs + E.c1)
 pr_c1_new     <-  E.c1      / (E.c0 + t1_cjs + E.c1)
 # ----
 
-#dam transport SARs -------------------------------------------------------------
+#dam transport SARs ----
 sarLGR. <- lgradults. /  x12.
 sarLGS. <- lgsadults. / (x1a2.)
 sarLMN. <- lmnadults. / (x1aa2.)
 # ----
 
-#load up answers ----------------------------------------------------------------
+#load up answers ----
 releaseCRT <- fill.CIs(R1)
 # releaseT   <- fill.CIs(R1.)
 # releaseR   <- fill.CIs(r$r1)
@@ -375,7 +354,7 @@ x1aa2 <- get.CIs(x1aa2.)
 
 delta2 <- get.CIs(delta2.)
 delta3 <- get.CIs(delta3.)
-delta4 <- get.CIs(delta4.)    # got an issue here
+delta4 <- get.CIs(delta4.)
 
 SR   <- get.CIs(vc_cjs)
 C0   <- get.CIs(sar_c0_cjs) *100
@@ -384,10 +363,6 @@ T0   <- get.CIs(sart0cjsad) *100
 Tx   <- get.CIs(sart1cjsad) *100
 TIR  <- get.CIs(t1_c0_cjsu)
 D    <- get.CIs(d_tm1_cjsu)
-
-#transform(TIR, boots_avg = as.numeric(boots_avg))
-
-#str(TIR)
 
 C0Modified   <- get.CIs(sar_c0_cjsMod) *100
 C1Modified   <- get.CIs(sar_c1_cjsMod) *100
@@ -437,25 +412,24 @@ C1pop         <- get.CIs(c1_cjsNEW)
 C1popModified <- get.CIs(c1_cjsNEWMod)
 # ----
 
-#wrangle format and output------------------------------------------------------
-#choose parameters:
+# wrangle format and output ----
+# choose parameters:
 parm <- c(#general stuff for evaluation; has various reach survival versions
           'doCalcsreaches', #'BSreaches',
           'releaseCRT', 'releaseT', #'releaseR',
           'SR_0expan', 'SR_1expan', 'SR_2expan', 'SR_3expan',
           'S1', 'S2', 'S3', 'S4',
-          'S5', 'S6', 'SR', 'S2.3', 'S2.3.4', 'S5.6',    ##adding for LGR-MCN S2.3.4, and S5.6 for MCN-BON
+          'S5', 'S6', 'SR', 'S2.3', 'S2.3.4', 'S5.6', # adding for LGR-MCN S2.3.4, and S5.6 for MCN-BON
 
           'p2', 'p3', 'p4', 'p5', 'p6', 'p7',
 
-          #overall SARs [from T group]
+          # overall SARs [from T group]
           'overallSAR', 'overallSAR_gj', 'overallSAR_b', 'overallSAR_bj',
-#
-#          #for SARs by route of passage or component SARs and proportion for each
+          # for SARs by route of passage or component SARs and proportion for each
           'TIR', 'D',
           'C0', 'C1', 'Tx',
-#
-#          #adults
+
+          # adults
           'C0adults',
           'C1adults',
           'Txadults',
@@ -463,28 +437,26 @@ parm <- c(#general stuff for evaluation; has various reach survival versions
           'adults_gj',
           'adults_b',
           'adults_bj',
-#
-          #smolt populations
+          # smolt populations
           'LGRpop',
           'C0pop', 'C1pop', 'Txpop',
-#
-#          #with modified s2*s3 truncated at 1.00
+
+          # with modified s2*s3 truncated at 1.00
           'TIRModified', 'DModified',
           'C0Modified', 'C1Modified', 'TxModified',
-#
           'C0popModified', 'C1popModified', 'TxpopModified',
-#
-#          #for the proportion transport appendix
+
+          # for the proportion transport appendix
           'delta2', 'delta3', 'delta4',
           'Pr_T', 'Pr_C0', 'Pr_C1',
-#
-#          #for the transport SARS appendix
+
+          # for the transport SARS appendix
           'x12', 'x1a2', 'x1aa2',
           'sarLGR', 'adultLGR',
           'sarLGS', 'adultLGS',
           'sarLMN', 'adultLMN',
-#
-#          #LGR equivalents of McNary Transports [T group]
+
+          # LGR equivalents of McNary Transports [T group]
           'MCNtransLGRequival'
 )
 #
@@ -494,22 +466,22 @@ ans <- cbind(parm, ansDF)
 
 # if(species != 'CH'){ans <-subset(ans, (! ans$parm %in% c('overallSAR_gj','overallSAR_bj')))}else{ans <-ans}
 
-#get rid of things that SQL doesn't like
+# get rid of things that SQL doesn't like
 ans[ans=="Inf"]<- NA
 ans[ans=="NaN"]<- NA
-#add things to output that will identify data in the sql table
+# add things to output that will identify data in the sql table
 # ans$input_sqlfile<-target
 # ans$migr_year<-migr_yr
-#ans$css_group<-css_group
+# #ans$css_group<-css_group
 # ans$rel_site<-rel_site
 # ans$tag_site<-tag_site
 # ans$coord_id<-coord_id
 # ans$flag<-as.character('')
 
 
-#finally print in R
+# finally print in R
 # print(format(ans, scientific = F))
 rownames(ans)<- parm
 return(ans)
 }
-#------------------------------------------------------------------------------
+
