@@ -9,9 +9,9 @@ Description: Automates the bootstrapping process for FPC biologists.
     format_dat()- upload and format input data files,
     surv_calc()- calculate parameter estimates, 
     bootystrapper()- process bootstrap loops, 
-    DoCalcs()/DoCalcs_uc()- convert estimates and calculate CSS parameters for output. 
+    doCalcs_v3()/doCalcs_uc()- convert estimates and calculate CSS parameters for output. 
     siml_cjs()- simulates fake detection history based on parameters values given.
-    DoCalcs() originally by Jack Tuomikoski.
+Imports: RODBC
 License: Unlimited
 Encoding: UTF-8
 LazyData: none
