@@ -1,5 +1,7 @@
-#Function to take BT4 output and return summary data for all annual report/web tables.
-#Last modified 5/19/2014 by JM
+
+# Function to take BT4 output and return summary data for all annual report/web tables.
+# Modified from doCalcs_v3
+
 #makefile = 'Y'
 #reaches =  6
 #target  =  'SR HCH 2010 RAPH'
@@ -36,7 +38,7 @@
 # t<-tfile
 # r<-rfile
 
-doCalcs_v3 <- function(crt, reaches=6, ...) {
+doCalcs_v3 <- function(crt, reaches=6, target, css_group, makefile='y', ...) {
 
 #
 #------------------------------------------------------------------------------
@@ -394,7 +396,7 @@ x1aa2 <- get.CIs(x1aa2.)
 
 delta2 <- get.CIs(delta2.)
 delta3 <- get.CIs(delta3.)
-delta4 <- get.CIs(delta4.)    # got an issue here
+delta4 <- get.CIs(delta4.)    # got an issue here (what issue?)
 
 SR   <- get.CIs(vc_cjs)
 C0   <- get.CIs(sar_c0_cjs) *100
@@ -506,56 +508,75 @@ ansDF <- get(parm[1])
 for(i in parm[-1]){ansDF <- rbind(ansDF, get(i))}
 ans <- cbind(parm, ansDF)
 
-#write file
-# if(makefile == 'Y'){
-# nm <- paste("doCalcs_v3 ", target, format(Sys.time(), '%Y-%m-%d %H%M%S')
-#                   ," ",reaches," reaches",".csv", sep = "")
-# ans$css_group<-css_group
-# write.table(ans,
-#             paste(nm, sep = "\\"),
-#             col.names = T, row.names = F, sep = ',',
-#             quote = F)}
-#
-# #also send to clipboard
-# write.table(ans,
-#             'clipboard',
-#             col.names = T, row.names = F, sep = ',',
-#             quote = F)
-#
-# #save to sql server CSS report
-# channel2 <- odbcDriverConnect("case=nochange;
-#                               Description=CSSREPORT;
-#                               DRIVER=SQL Server;
-#                               SERVER=PITTAG_SQL6;
-#                               UID=sa;
-#                               PWD=frznool;
-#                               WSID=CUTTHROAT;
-#                               DATABASE=CSSREPORT;
-#                               Network=DBMSSOCN")
-#get rid of things that SQL doesn't like
-ans[ans=="Inf"]<- NA
-ans[ans=="NaN"]<- NA
-#add things to output that will identify data in the sql table
-# ans$input_sqlfile<-target
-# ans$migr_year<-migr_yr
-# #ans$css_group<-css_group
-# ans$rel_site<-rel_site
-# ans$tag_site<-tag_site
-# ans$coord_id<-coord_id
-# ans$flag<-as.character('')
-##IS THIS DATA ALREADY IN THE TABLE?
-# inthesqltable<-sqlQuery(channel2, paste("select css_group, migr_year, parm, thecount = count(initial) from BOOTSTRAP_RESULTS where css_group = " , "'", css_group, "'", " and migr_year = " , "'", migr_yr, "'", " and parm = 'overallSAR' group by css_group, migr_year, parm", sep=""))
-#
-# ##EITHER UPDATE OR SAVE DEPENDING ON ANSWER
-# if(length(inthesqltable$thecount) != '0') {
-#   sqlUpdate(channel2, data.frame(ans),tablename="BOOTSTRAP_RESULTS", index = c('css_group', 'migr_year', 'parm'), verbose = FALSE, test = FALSE, nastring = NULL,fast = TRUE)
-# } else {
-#     sqlSave(channel2,data.frame(ans),tablename="BOOTSTRAP_RESULTS",safer=TRUE,append=TRUE)
-# }
-#
-# odbcCloseAll()
 
-#finally print in R
+# option to save output to working directory and sql server
+if (makefile == 'y' | makefile == 'Y') {
+  # save bootystrap output to sql server
+  rand_str <- function(n) {
+    do.call(paste0, replicate(7, sample(c(letters,letters,0:9), n, TRUE), FALSE))
+  }
+  channel <- odbcDriverConnect("case=nochange;
+                                Description=CSSOUTPUT;
+                                DRIVER=SQL Server;
+                                SERVER=PITTAG_SQL6;
+                                UID=sa;
+                                PWD=frznool;
+                                WSID=CUTTHROAT;
+                                DATABASE=CSSOUTPUT;
+                                Network=DBMSSOCN")
+  sqlSave(channel, data.frame(crt), tablename=paste0('CRT_', target, '_bootylator_', rand_str(1), format(Sys.time(), '%m%d%Y')) )
+  odbcCloseAll()
+
+  # write doCalcs output in csv file to working directory
+  nm <- paste("doCalcs_v3 ", target, format(Sys.time(), '%Y-%m-%d %H%M%S'),
+    " ",reaches," reaches",".csv", sep = "")
+  ans$css_group<-css_group
+  write.table(ans, paste(nm, sep = "\\"),
+    col.names = T, row.names = F, sep = ',', quote = F)
+
+  # also send to clipboard
+  # write.table(ans,
+  #             'clipboard',
+  #             col.names = T, row.names = F, sep = ',',
+  #             quote = F)
+
+  # save to sql server CSS report
+  channel2 <- odbcDriverConnect("case=nochange;
+                                Description=CSSREPORT;
+                                DRIVER=SQL Server;
+                                SERVER=PITTAG_SQL6;
+                                UID=sa;
+                                PWD=frznool;
+                                WSID=CUTTHROAT;
+                                DATABASE=CSSREPORT;
+                                Network=DBMSSOCN")
+  # get rid of things that sql doesn't like
+  ans[ans=="Inf"]<- NA
+  ans[ans=="NaN"]<- NA
+  # add things to output that will identify data in the sql table
+  migr_yr<- as.numeric(regmatches(target, regexpr("[0-9]...", target)))
+
+  ans$input_sqlfile<- target
+  ans$migr_year<- migr_yr
+  ans$css_group<- css_group # needs manual input
+  ans$rel_site<- crt$rel_site[1]
+  ans$tag_site<- crt$tag_site[1]
+  ans$coord_id<- crt$coord_id[1]
+  ans$flag<- as.character('')
+  # IS THIS DATA ALREADY IN THE TABLE?
+  inthesqltable<- sqlQuery(channel2, paste("select css_group, migr_year, parm, thecount = count(initial) from BOOTSTRAP_RESULTS where css_group = ", "'", css_group, "'", " and migr_year = ", "'", migr_yr, "'", " and parm = 'overallSAR' group by css_group, migr_year, parm", sep=""))
+
+  # EITHER UPDATE OR SAVE DEPENDING ON ANSWER
+  if(length(inthesqltable$thecount) != '0') {
+    sqlUpdate(channel2, data.frame(ans),tablename="BOOTSTRAP_RESULTS", index = c('css_group', 'migr_year', 'parm'), verbose = FALSE, test = FALSE, nastring = NULL,fast = TRUE)
+  } else {
+      sqlSave(channel2,data.frame(ans),tablename="BOOTSTRAP_RESULTS",safer=TRUE,append=TRUE)
+  }
+
+  odbcCloseAll()
+}
+
+# finally print in R
 # print(format(ans, scientific = F))
 rownames(ans)<- parm
 return(ans)

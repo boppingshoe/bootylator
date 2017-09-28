@@ -2,7 +2,7 @@
 #' Import and format data for ready to use by \code{surv_calc()}
 #'
 #' @param file_name File path where the input csv file is stored.
-#' @param wgt 'y' if using weighted sampling probability.
+#' @param wgt "y" if using weighted sampling probability. User will be prompted to enter the amount of intergrated and segregated fish.
 #' @return Capture history and indicators for adult return.
 #' @examples
 #' detect_data<- format_dat('C:/Users/bobbyhsu/Documents/Temp/SR HCH 2014 MCCA.csv', wgt='n')
@@ -13,18 +13,22 @@ format_dat<- function(file_name, wgt){
   yomama_in<- read.csv(file=file_name)#, na.strings= c('','NA'))
   if(names(yomama_in)[1]!='tag_id') {
     yomama_in<- read.csv(file=file_name, header = FALSE)
-    names(yomama_in)<- c('tag_id',	'burnham_hi',	'length',	'capture_di',	'mort',	'transport',	'GRJ_OBS',	'GRX_OBS',	'GOJ_OBS',	'LMJ_OBS',	'ICH_OBS',	'MCJ_OBS',	'JDJ_OBS',	'BON_OBS',	'MCA_OBS',	'TWX_OBS',	'BOA_OBS',	'GRA_OBS',	'srrt',	'tag_site',	'rel_site',	'coord_id',	'rel_date',	'river_km',	'migr_yr',	'flag',	'tag_date',	'tag_file',	'wt',	'flags',	'tag_rem')
+    names(yomama_in)<- c('tag_id', 'burnham_hi', 'length', 'capture_di', 'mort',
+      'transport', 'GRJ_OBS',	'GRX_OBS', 'GOJ_OBS',	'LMJ_OBS', 'ICH_OBS',	'MCJ_OBS',
+      'JDJ_OBS',	'BON_OBS', 'MCA_OBS',	'TWX_OBS', 'BOA_OBS',	'GRA_OBS', 'srrt',
+      'tag_site', 'rel_site', 'coord_id',	'rel_date',	'river_km',	'migr_yr', 'flag',
+      'tag_date', 'tag_file', 'wt', 'flags', 'tag_rem')
   }
   # yomama <- subset(yomama_in, , c(1,4,16,17,18,23, grep('flag', names(yomama_in))))
   yomama <- subset(yomama_in, , c(1,4,16,grep('BOA', names(yomama_in))[1],ifelse(grepl('BOA', names(yomama_in)[18]), 17, 18),23, grep('flag', names(yomama_in))))
   n_col<- ncol(yomama)
   if(n_col==6) {
-    names(yomama)<- c("tagId","burnham","twx","boa","return","relDate")
+    names(yomama)<- c("tag_id","burnham","twx","boa","return","rel_date")
     yomama$group<- 'T'
   } else if(n_col==7) {
-    names(yomama)<- c("tagId","burnham","twx","boa","return","relDate","group")
+    names(yomama)<- c("tag_id","burnham","twx","boa","return","rel_date","group")
   } else if(n_col==8) {
-    names(yomama)<- c("tagId","burnham","twx","boa","return","relDate","group","brood")
+    names(yomama)<- c("tag_id","burnham","twx","boa","return","rel_date","group","brood")
   } else stop('Data file is not read properly. Make sure data source is in the correct format.')
   n_occ<- nchar(yomama$burnham[1])+1
   # ----
@@ -43,7 +47,7 @@ format_dat<- function(file_name, wgt){
 
   # add columns before original order is altered ----
   fdat$burnham<- apply(fdat[,1:n_occ], 1 , function(x) paste0(x, collapse=''))
-  fdat$tagId<- yomama$tagId
+  fdat$tag_id<- yomama$tag_id
   fdat$group<- yomama$group
 
   if(wgt=='y'){
@@ -57,7 +61,7 @@ format_dat<- function(file_name, wgt){
                           segr/sum(fdat$brood=='AD'))
   } else fdat$prob<- 1/nrow(fdat)
 
-  fdat$relDate<- as.Date(substr(yomama$relDate, 1,10))
+  fdat$rel_date<- as.Date(substr(yomama$rel_date, 1,10))
   yomama$boa[grepl("^ *$",yomama$boa)]<- NA
   yomama$return[grepl("^ *$",yomama$return)]<- NA
   fdat$boa<- as.Date(substr(yomama$boa, 1,10))
@@ -79,24 +83,26 @@ format_dat<- function(file_name, wgt){
   }
 
   tempset<- fdat[grep('[23]', fdat$burnham),]
-  if(nrow(tempset)>0){
+  if(nrow(tempset)> 0){
     posi<- apply(tempset[,1:n_occ], 1, function(x) grep('[23]', x)[1])
 
-    badId23<- tempset[grepl('[123]', substr(tempset$burnham, posi+1, n_occ)), 'tagId']
+    badId23<- tempset[grepl('[123]', substr(tempset$burnham, posi+1, n_occ)), 'tag_id']
     badId23<- badId23[!is.na(badId23)]
-    if(length(badId23)>0){
-      tmp23<- apply(subset(fdat, tagId%in%badId23, 1:n_occ), 1, correct)
-      tmp23<- as.data.frame(cbind(t(tmp23), subset(fdat, tagId%in%badId23,
+    if(length(badId23)> 0){
+      tmp23<- apply(subset(fdat, tag_id%in%badId23, 1:n_occ), 1, correct)
+      tmp23<- as.data.frame(cbind(t(tmp23), subset(fdat, tag_id%in%badId23,
         (n_occ+1):ncol(fdat)) ))
-      fdat<- rbind( tmp23, subset(fdat,!(tagId%in%badId23)) )
+      fdat<- rbind( tmp23, subset(fdat,!(tag_id%in%badId23)) )
 
       posi2<- apply(tmp23[,1:n_occ], 1, function(x) grep('[23]', x))
       qnable<- tmp23[as.numeric(substr(tmp23$burnham, posi2+1, n_occ))!=1, ]
 
-      # toshow<- readline(prompt=paste('I found', length(badId23), 'questionable fish. Would you like to see the list (y/shush)? '))
-      # if(toshow=='y') print(subset(fdat, tagId%in%badId23, c(1:n_occ, burnham, tagId, group, relDate)), max.print=1e+06)
-      toshow<- readline(prompt=paste('I found', nrow(qnable), 'questionable fish. Would you like to see the list (y/shush)? '))
-      if(toshow=='y') print(qnable[, c(paste0('occ',1:n_occ), 'burnham', 'tagId', 'group', 'relDate')], max.print=1e+06)
+      if(nrow(qnable)> 0){
+        toshow<- readline(prompt= paste('I found', nrow(qnable),
+            'questionable fish. Would you like to see the list (y/shush)? '))
+        if(toshow=='y') print(qnable[, c(paste0('occ',1:n_occ),
+        'burnham', 'tag_id', 'group', 'rel_date')], max.print=1e+06)
+      }
     }
   }
   # ----
@@ -180,7 +186,12 @@ format_dat<- function(file_name, wgt){
   fdat$d71<- ifelse(fdat$c0type==0& (fdat[,7]==2|fdat[,7]==3), 1, 0)
   # ----
 
-    return(fdat)
+  # add identifiers
+  fdat$tag_site<- yomama_in$tag_site
+  fdat$rel_site<- yomama_in$rel_site
+  fdat$coord_id<- yomama_in$coord_id
+
+  return(fdat)
 }
 
 
@@ -190,7 +201,9 @@ format_dat<- function(file_name, wgt){
 #' @param i Iteration number used by the bootstrap function \code{bootystrapper()}.
 #' @param wt Indicates whether to weight the sampling probability.
 #' @param wt_i Indicates whether to calculate the original estimates using weighted probability.
-#' @param phi_p_pnly 'y' if only want to calculate survivals and detection rates.
+#' @param phi_p_only Option to only calculate survivals and detection and not do the adult counts. Default to no ("n") if not specified.
+#' @param fpc Option to adapt finite population correction for survival and detection calculations. Default to no ("n") if not specified.
+#' @param match_bt4 Option to follow the procedures used by BT4 program. BT4 excludes mini-jacks for both adult and juvenile removal counts. Default to yes ("y") if not specified. If one choosed no ("n"), mini-jacks would be included in the juvenile removal counts.
 #' @return Survivals, detection and returing adult counts
 #' @examples
 #' for(i in 1:10){
@@ -254,14 +267,23 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
     x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0)),
       nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0)),
       nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0)),
-      ifelse(nocc>4, nrow(subset(cht, occ5==2 & as.numeric(substr(burnham,6,nocc-1))==0)), NA)) # t group
+      ifelse(nocc>4, nrow(subset(cht, occ5==2 &
+          as.numeric(substr(burnham,6,nocc-1))==0)), NA)) # t group
   } else {
-    # BT4 doesn't count smolt that went down adult ladders at 'granite'
+    # BT4 doesn't count smolts that return as mini-jacks
     # do this to match BT4 counts
-    x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
-      nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
-      nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))),
-      ifelse(nocc>4, nrow(subset(cht, occ5==2 & as.numeric(substr(burnham,6,nocc-1))==0 & (age_rtn!=0|is.na(age_rtn)))), NA)) # t group
+    x_t<- cbind(nrow(subset(cht, occ2==2 &
+        as.numeric(substr(burnham,3,nocc-1))==0 &
+        (age_rtn!=0|is.na(age_rtn)))),
+      nrow(subset(cht, occ3==2 &
+          as.numeric(substr(burnham,4,nocc-1))==0 &
+          (age_rtn!=0|is.na(age_rtn)))),
+      nrow(subset(cht, occ4==2 &
+          as.numeric(substr(burnham,5,nocc-1))==0 &
+          (age_rtn!=0|is.na(age_rtn)))),
+      ifelse(nocc>4, nrow(subset(cht, occ5==2 &
+          as.numeric(substr(burnham,6,nocc-1))==0 &
+          (age_rtn!=0|is.na(age_rtn)))), NA)) # t group
   }
 
   x_0<- cbind(nrow(cht[cht[,2]==0 & cht[,3]==2,]),
@@ -329,12 +351,15 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
 #' @param n_occ Total detection events including the trawl.
 #' @param wgt Indicates whether to weight the sampling probability.
 #' @param wgt_int Indicates whether to calculate the original estimates using weighted probability.
+#' @param phi_p_only Indicate to turn off the phi_p_only option in \code{curv_calc()}. Default is no ("n").
+#' @param fpc Indicate to turn off the fpc option in \code{curv_calc()}. Default is yes ("y").
+#' @param match_bt4 Indicate to turn off the match_bt4 option in \code{curv_calc()}. The default here is yes ("y").
 #' @return Estimates in a data frame with original estimate as the first row and bootstrap results in the remaining rows.
 #' @examples
 #' out<- bootystrapper(detect_data, surv_calc, iter=100, n_occ=8, wgt='n', wgt_init='n')
 #' head(out)
 #'
-bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', match_bt4='n', ...){
+bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', match_bt4='y', ...){
   start_time<- Sys.time()
   n_occ<- sum(grepl('occ', names(d)))
   original <- fn(d, i=1, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4) #run function on original data
@@ -361,18 +386,21 @@ bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', m
     # if ((i-1) %in% seq(0,iter, by=50)) cat(i-1, ' ')
     setTxtProgressBar(pb, i)
   } # bootstrap loop
-  # build output matrix and return
   close(pb)
+  # build output matrix and return
   out <- as.data.frame(out)
+  out$tag_site<- d$tag_site[1]
+  out$rel_site<- d$rel_site[1]
+  out$coord_id<- d$coord_id[1]
 
   if(phi_p_only== 'y') {
     colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)))
   } else if(wgt== 'y') {
-    colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'AD_R', 'AD_T', 'CW_R', 'CW_T')
+    colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'AD_R', 'AD_T', 'CW_R', 'CW_T', 'tag_site', 'rel_site', 'coord_id')
   } else if(n_occ== 8) { # n_occ= 8 and not weighted
-    colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'R group', 'T group')
+    colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'R group', 'T group', 'tag_site', 'rel_site', 'coord_id')
   } else { # n_occ= 4 or 6
-    colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn')
+    colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'tag_site', 'rel_site', 'coord_id')
   }
 
   cat('\n')
