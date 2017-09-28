@@ -505,7 +505,7 @@ if (makefile == 'y' | makefile == 'Y') {
   # write doCalcs output in csv file to working directory
   nm <- paste("doCalcs_v3 ", target, format(Sys.time(), '%Y-%m-%d %H%M%S'),
     " ",reaches," reaches",".csv", sep = "")
-  ans$css_group<-css_group
+  # ans$css_group<-css_group
   write.table(ans, paste(nm, sep = "\\"),
     col.names = T, row.names = F, sep = ',', quote = F)
 
