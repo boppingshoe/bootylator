@@ -1,42 +1,17 @@
 
-# Function to take BT4 output and return summary data for all annual report/web tables.
+#' Take bootstrap output and return summary data for all annual report/web table
+#'
+#' @param crt Bootstrap output as input file here.
+#' @param reaches Number of reach expansion. Default is 6.
+#' @param target The name of the original input file (eg. SR HCH 2015 MCCA).
+#' @param css_group CSS group from the CSSGroups_LookupTable.
+#' @param makefile Save bootstrap output in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.
+#' @return Survivals,detection, adult counts, and SARs...
+#' @examples
+#' marray(detect_data, n_occ=8)
+#'
+
 # Modified from doCalcs_v3
-
-#makefile = 'Y'
-#reaches =  6
-#target  =  'SR HCH 2010 RAPH'
-#migr_yr = 2010
-#makefile= 'Y', reaches =  5, location = filepath, target  =  'SR HCH 2011 SAWT', migr_yr = 2011, css_group = 'SAWT', rel_site = 'AGGR', tag_site = 'SAWT', coord_id = 'BDL'
-#doCalcs_v3 <- function(makefile, reaches, target, crtfile,tfile,rfile){
-
-# doCalcs_v3 <- function(makefile, reaches, target, location, migr_yr, css_group,rel_site,tag_site,coord_id){
-# library(RODBC)
-# channel <- odbcDriverConnect("case=nochange;
-#                               Description=CSSOUTPUT;
-#                               DRIVER=SQL Server;
-#                               SERVER=PITTAG_SQL6;
-#                               UID=sa;
-#                               PWD=frznool;
-#                               WSID=CUTTHROAT;
-#                               DATABASE=CSSOUTPUT;
-#                               Network=DBMSSOCN")
-#
-#
-# tables<-sqlQuery(channel, paste("select * from sys.tables where name like " , "'%", target, "%'", " order by name asc", sep=""))
-# tables$name
-#
-# crtnm<-factor(tables$name[1])
-# rnm<-factor(tables$name[2])
-# tnm<-factor(tables$name[3])
-#
-# crtfile<-sqlFetch(channel, crtnm, colnames = FALSE, rownames = TRUE)
-# tfile<-sqlFetch(channel, tnm, colnames = FALSE, rownames = TRUE)
-# rfile<-sqlFetch(channel, rnm, colnames = FALSE, rownames = TRUE)
-#
-#
-# crt<-crtfile
-# t<-tfile
-# r<-rfile
 
 doCalcs_v3 <- function(crt, reaches=6, target, css_group, makefile='y', ...) {
 
