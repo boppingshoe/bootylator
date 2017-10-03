@@ -1,46 +1,19 @@
-#Function to take BT4 output and return summary data for all annual report/web tables.
-#Last modified 5/19/2014 by JM
-#makefile = 'Y'
-#reaches =  6
-#target  =  'SR HCH 2010 RAPH'
-#migr_yr = 2010
 
-# doCalcs_v3_Bootstrap_in_R <- function(makefile, target, location, migr_yr, css_group,rel_site,tag_site,coord_id){
-# library(RODBC)
-# channel <- odbcDriverConnect("case=nochange;
-#                               Description=CSSOUTPUT;
-#                               DRIVER=SQL Server;
-#                               SERVER=PITTAG_SQL6;
-#                               UID=sa;
-#                               PWD=frznool;
-#                               WSID=CUTTHROAT;
-#                               DATABASE=CSSOUTPUT;
-#                               Network=DBMSSOCN")
-#
-# #target<-'HCH 2011 WSPH'
-# tables<-sqlQuery(channel, paste("select * from sys.tables where name like " , "'%", target, "%'", " order by name asc", sep=""))
-# tables$name
-#
-# crtnm<-factor(tables$name[1])
-# #rnm<-factor(tables$name[2])
-# #tnm<-factor(tables$name[3])
-#
-# crtfile<-sqlFetch(channel, crtnm, colnames = FALSE, rownames = TRUE)
-# #tfile<-sqlFetch(channel, tnm, colnames = FALSE, rownames = TRUE)
-# #rfile<-sqlFetch(channel, rnm, colnames = FALSE, rownames = TRUE)
-#
-#
-# crt<-crtfile
-# #t<-tfile
-# #r<-rfile
 
-#
-#------------------------------------------------------------------------------
-#Code written by Jack Tuomik
-#May 2012
-#this function rounds things in similar way to Excel and I think Foxpro
-#by default, R has it's own rounding method that is different from the other two
-doCalcs_uc <- function(crt, ...){
+#' Take bootstrap output and return summary data for all annual report/web table for Upper and Mid Columbia River fish
+#'
+#' @param crt Bootstrap output as input file here.
+#' @param target The name of the original input file (eg. SR HCH 2015 MCCA).
+#' @param css_group CSS group from the CSSGroups_LookupTable.
+#' @param makefile Save bootstrap output in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.
+#' @return Survivals,detection, adult counts, and SARs...
+#' @examples
+#' ans<- doCalcs_uc(crt, target='CR_USK_2015_OKAN_MCJ', css_group='OKSR', makefile='y')
+#' round(ans, 3)
+#' print(format(ans, scientific = F))
+
+
+doCalcs_uc <- function(crt, target, css_group, makefile='y', ...){
 
 roundT <- function(x, ...){
   if(is.null(names(list(...)))){
@@ -174,61 +147,79 @@ parm <- c(
           ,'releaseSAR_m','overallSAR_m', 'overallSAR_mj'
   )
 #
-#
 ansDF <- get(parm[1])
 for(i in parm[-1]){ansDF <- rbind(ansDF, get(i))}
-
 ans <- cbind(parm, ansDF)
-#makefile = 'Y'
-#write file
-# if(makefile == 'Y'){
-# nm <- paste("doCalcs_v3_bstrp_R ", target, format(Sys.time(), '%Y-%m-%d %H%M%S')
-#                   ," ",".csv", sep = "")
-# write.table(ans,
-#             paste(nm, sep = "\\"),
-#             col.names = T, row.names = F, sep = ',',
-#             quote = F)}
-# #also send to clipboard
-# write.table(ans,
-#             'clipboard',
-#             col.names = T, row.names = F, sep = ',',
-#             quote = F)
-#
-# # save to sql server CSS report
-# channel3 <- odbcDriverConnect("case=nochange;
-#                               Description=CSSREPORT;
-#                               DRIVER=SQL Server;
-#                               SERVER=PITTAG_SQL6;
-#                               UID=sa;
-#                               PWD=frznool;
-#                               WSID=CUTTHROAT;
-#                               DATABASE=CSSREPORT;
-#                               Network=DBMSSOCN")
-#add things to output that will identify data in the sql table
-#for practice
-#migr_yr<-2011
-#css_group<-"WSPH"
-#rel_site<-"WSPH"
-#tag_site<-"WSPH"
-#coord_id<-"JAR"
 
-# ans$input_sqlfile<-target
-# ans$migr_year<-migr_yr
-# ans$css_group<-css_group
-# ans$rel_site<-rel_site
-# ans$tag_site<-tag_site
-# ans$coord_id<-coord_id
-# ans$flag<-as.character('')
-##IS THIS DATA ALREADY IN THE TABLE?
-# inthesqltable<-sqlQuery(channel3, paste("select css_group, migr_year, parm, thecount = count(initial) from BOOTSTRAP_RESULTS_COL where css_group = " , "'", css_group, "'", " and migr_year = " , "'", migr_yr, "'", " and parm = 'overallSAR_b' group by css_group, migr_year, parm", sep=""))
 
-#new version updates if existing data otherwise inserts if not
-# if(length(inthesqltable$thecount) != '0'){
-# {sqlUpdate(channel3, data.frame(ans),tablename="BOOTSTRAP_RESULTS_COL", index = c('css_group', 'migr_year', 'parm'), verbose = FALSE, test = FALSE, nastring = NULL,fast = TRUE)}}else{
-# sqlSave(channel3,data.frame(ans),tablename="BOOTSTRAP_RESULTS_COL",safer=TRUE,append=TRUE)}
-#old version just inserts data
-#sqlSave(channel3,data.frame(ans),tablename="BOOTSTRAP_RESULTS_COL",safer=TRUE,append=TRUE)
-#finally print in R
+# option to save output to working directory and sql server
+if (makefile == 'y' | makefile == 'Y') {
+  # save bootystrap output to sql server
+  rand_str <- function(n) {
+    do.call(paste0, replicate(7, sample(c(letters,letters,0:9), n, TRUE), FALSE))
+  }
+  channel <- odbcDriverConnect("case=nochange;
+    Description=CSSOUTPUT;
+    DRIVER=SQL Server;
+    SERVER=PITTAG_SQL6;
+    UID=sa;
+    PWD=frznool;
+    WSID=CUTTHROAT;
+    DATABASE=CSSOUTPUT;
+    Network=DBMSSOCN")
+  sqlSave(channel, data.frame(crt), tablename=paste0('CRT_', target, '_bootylator_', rand_str(1), format(Sys.time(), '%m%d%Y')) )
+  odbcCloseAll()
+
+  # write doCalcs output in csv file to working directory
+  nm <- paste("doCalcs_v3 ", target, format(Sys.time(), '%Y-%m-%d %H%M%S'),
+    " ",reaches," reaches",".csv", sep = "")
+  # ans$css_group<-css_group
+  write.table(ans, paste(nm, sep = "\\"),
+    col.names = T, row.names = F, sep = ',', quote = F)
+
+  # also send to clipboard
+  # write.table(ans,
+  #             'clipboard',
+  #             col.names = T, row.names = F, sep = ',',
+  #             quote = F)
+
+  # save to sql server CSS report
+  channel2 <- odbcDriverConnect("case=nochange;
+                                Description=CSSREPORT;
+                                DRIVER=SQL Server;
+                                SERVER=PITTAG_SQL6;
+                                UID=sa;
+                                PWD=frznool;
+                                WSID=CUTTHROAT;
+                                DATABASE=CSSREPORT;
+                                Network=DBMSSOCN")
+  # get rid of things that sql doesn't like
+  ans[ans=="Inf"]<- NA
+  ans[ans=="NaN"]<- NA
+  # add things to output that will identify data in the sql table
+  migr_yr<- as.numeric(regmatches(target, regexpr("[0-9]...", target)))
+
+  ans$input_sqlfile<- target
+  ans$migr_year<- migr_yr
+  ans$css_group<- css_group # needs manual input
+  ans$rel_site<- crt$rel_site[1]
+  ans$tag_site<- crt$tag_site[1]
+  ans$coord_id<- crt$coord_id[1]
+  ans$flag<- as.character('')
+  # IS THIS DATA ALREADY IN THE TABLE?
+  inthesqltable<- sqlQuery(channel2, paste("select css_group, migr_year, parm, thecount = count(initial) from BOOTSTRAP_RESULTS where css_group = ", "'", css_group, "'", " and migr_year = ", "'", migr_yr, "'", " and parm = 'overallSAR' group by css_group, migr_year, parm", sep=""))
+
+  # EITHER UPDATE OR SAVE DEPENDING ON ANSWER
+  if(length(inthesqltable$thecount) != '0') {
+    sqlUpdate(channel2, data.frame(ans),tablename="BOOTSTRAP_RESULTS", index = c('css_group', 'migr_year', 'parm'), verbose = FALSE, test = FALSE, nastring = NULL,fast = TRUE)
+  } else {
+    sqlSave(channel2,data.frame(ans),tablename="BOOTSTRAP_RESULTS",safer=TRUE,append=TRUE)
+  }
+
+  odbcCloseAll()
+}
+
+# finally print in R
 # print(format(ans, scientific = F))
 rownames(ans)<- parm
 return(ans)

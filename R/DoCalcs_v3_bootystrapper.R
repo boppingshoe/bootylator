@@ -1,5 +1,5 @@
 
-#' Take bootstrap output and return summary data for all annual report/web table
+#' Take bootstrap output and return summary data for all annual report/web table for Snake River fish
 #'
 #' @param crt Bootstrap output as input file here.
 #' @param reaches Number of reach expansion. Default is 6.
@@ -8,17 +8,16 @@
 #' @param makefile Save bootstrap output in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.
 #' @return Survivals,detection, adult counts, and SARs...
 #' @examples
-#' marray(detect_data, n_occ=8)
-#'
+#' ans<- doCalcs_v3(crt, reaches=6, target='SR HCH 2015 MCCA', css_group='MCCA', makefile='y')
+#' round(ans, 3)
+#' print(format(ans, scientific = F))
 
-# Modified from doCalcs_v3
 
 doCalcs_v3 <- function(crt, reaches=6, target, css_group, makefile='y', ...) {
 
-#
 #------------------------------------------------------------------------------
-# Code written by Jack Tuomikoski
-# May 2012
+# Modified from doCalcs_v3 (by Jack Tuomikoski)
+
 # R rounds to the nearest even number, roundT rounds up
 
 roundT <- function(x, ...){

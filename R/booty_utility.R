@@ -199,6 +199,7 @@ format_dat<- function(file_name, wgt){
 #'
 #' @param ch Input file made by \code{format_dat()} function.
 #' @param i Iteration number used by the bootstrap function \code{bootystrapper()}.
+#' @param nocc Total detection events including the trawl.
 #' @param wt Indicates whether to weight the sampling probability.
 #' @param wt_i Indicates whether to calculate the original estimates using weighted probability.
 #' @param phi_p_only Option to only calculate survivals and detection and not do the adult counts. Default to no ("n") if not specified.
@@ -348,9 +349,8 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
 #' @param d Input file made by \code{format_dat()}.
 #' @param fn Function to run the bootstrap on.
 #' @param iter Amount of bootstrap iterations.
-#' @param n_occ Total detection events including the trawl.
 #' @param wgt Indicates whether to weight the sampling probability.
-#' @param wgt_int Indicates whether to calculate the original estimates using weighted probability.
+#' @param wgt_init Indicates whether to calculate the original estimates using weighted probability.
 #' @param phi_p_only Indicate to turn off the phi_p_only option in \code{curv_calc()}. Default is no ("n").
 #' @param fpc Indicate to turn off the fpc option in \code{curv_calc()}. Default is yes ("y").
 #' @param match_bt4 Indicate to turn off the match_bt4 option in \code{curv_calc()}. The default here is yes ("y").
