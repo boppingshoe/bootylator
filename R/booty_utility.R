@@ -202,13 +202,13 @@ format_dat<- function(file_name, wgt){
 #' @param nocc Total detection events including the trawl.
 #' @param wt Indicates whether to weight the sampling probability.
 #' @param wt_i Indicates whether to calculate the original estimates using weighted probability.
-#' @param phi_p_only Option to only calculate survivals and detection and not do the adult counts. Default to no ("n") if not specified.
-#' @param fpc Option to adapt finite population correction for survival and detection calculations. Default to no ("n") if not specified.
-#' @param match_bt4 Option to follow the procedures used by BT4 program. BT4 excludes mini-jacks for both adult and juvenile removal counts. Default to yes ("y") if not specified. If one choosed no ("n"), mini-jacks would be included in the juvenile removal counts.
+#' @param phi_p_only Option to only calculate survivals and detection and not do the adult counts. Default is no ("n") if not specified.
+#' @param fpc Option to adapt finite population correction for survival and detection calculations. Default is no ("n") if not specified.
+#' @param match_bt4 Option to follow the procedures used by BT4 program. BT4 excludes mini-jacks for both adult and juvenile removal counts. Default is yes ("y") if not specified. If one choosed no ("n"), mini-jacks would be included in the juvenile removal counts.
 #' @return Survivals, detection and returing adult counts
 #' @examples
 #' for(i in 1:10){
-#'   results<- surv_calc(detect_data, i, nocc=8, wt='y', wt_i='y')
+#'   results<- surv_calc(detect_data, i, nocc=8, wt='y', wt_i='y', phi_p_only='y')
 #' }
 #' results
 #'
