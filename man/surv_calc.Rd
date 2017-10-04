@@ -4,16 +4,24 @@
 \alias{surv_calc}
 \title{Estimate survivals, detections, and tally adult returns}
 \usage{
-surv_calc(ch, i, nocc, wt, wt_i)
+surv_calc(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...)
 }
 \arguments{
 \item{ch}{Input file made by \code{format_dat()} function.}
 
 \item{i}{Iteration number used by the bootstrap function \code{bootystrapper()}.}
 
+\item{nocc}{Total detection events including the trawl.}
+
 \item{wt}{Indicates whether to weight the sampling probability.}
 
 \item{wt_i}{Indicates whether to calculate the original estimates using weighted probability.}
+
+\item{phi_p_only}{Option to only calculate survivals and detection and not do the adult counts. Default is no ("n") if not specified.}
+
+\item{fpc}{Option to adapt finite population correction for survival and detection calculations. Default is no ("n") if not specified.}
+
+\item{match_bt4}{Option to follow the procedures used by BT4 program. BT4 excludes mini-jacks for both adult and juvenile removal counts. Default is yes ("y") if not specified. If one choosed no ("n"), mini-jacks would be included in the juvenile removal counts.}
 }
 \value{
 Survivals, detection and returing adult counts
@@ -23,7 +31,7 @@ Estimate survivals, detections, and tally adult returns
 }
 \examples{
 for(i in 1:10){
-  results<- surv_calc(detect_data, i, nocc=8, wt='y', wt_i='y')
+  results<- surv_calc(detect_data, i, nocc=8, wt='y', wt_i='y', phi_p_only='y')
 }
 results
 

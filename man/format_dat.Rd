@@ -9,7 +9,7 @@ format_dat(file_name, wgt)
 \arguments{
 \item{file_name}{File path where the input csv file is stored.}
 
-\item{wgt}{'y' if using weighted sampling probability.}
+\item{wgt}{"y" if using weighted sampling probability. User will be prompted to enter the amount of intergrated and segregated fish.}
 }
 \value{
 Capture history and indicators for adult return.

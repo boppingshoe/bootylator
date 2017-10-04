@@ -4,7 +4,8 @@
 \alias{bootystrapper}
 \title{Bootstrap using surv_calc and organize output}
 \usage{
-bootystrapper(d, fn, iter, n_occ, wgt, wgt_init)
+bootystrapper(d, fn, iter, wgt, wgt_init, phi_p_only = "n", fpc = "y",
+  match_bt4 = "y", ...)
 }
 \arguments{
 \item{d}{Input file made by \code{format_dat()}.}
@@ -13,11 +14,15 @@ bootystrapper(d, fn, iter, n_occ, wgt, wgt_init)
 
 \item{iter}{Amount of bootstrap iterations.}
 
-\item{n_occ}{Total detection events including the trawl.}
-
 \item{wgt}{Indicates whether to weight the sampling probability.}
 
-\item{wgt_int}{Indicates whether to calculate the original estimates using weighted probability.}
+\item{wgt_init}{Indicates whether to calculate the original estimates using weighted probability.}
+
+\item{phi_p_only}{Indicate to turn off the phi_p_only option in \code{curv_calc()}. Default is no ("n").}
+
+\item{fpc}{Indicate to turn off the fpc option in \code{curv_calc()}. Default is yes ("y").}
+
+\item{match_bt4}{Indicate to turn off the match_bt4 option in \code{curv_calc()}. The default here is yes ("y").}
 }
 \value{
 Estimates in a data frame with original estimate as the first row and bootstrap results in the remaining rows.
