@@ -17,11 +17,11 @@ surv_calc(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...)
 
 \item{wt_i}{Indicates whether to calculate the original estimates using weighted probability.}
 
-\item{phi_p_only}{Option to only calculate survivals and detection and not do the adult counts. Default is no ("n") if not specified.}
+\item{phi_p_only}{Option to only calculate survivals and detection and not do the adult counts.}
 
-\item{fpc}{Option to adapt finite population correction for survival and detection calculations. Default is no ("n") if not specified.}
+\item{fpc}{Option to adapt finite population correction for survival and detection calculations.}
 
-\item{match_bt4}{Option to follow the procedures used by BT4 program. BT4 excludes mini-jacks for both adult and juvenile removal counts. Default is yes ("y") if not specified. If one choosed no ("n"), mini-jacks would be included in the juvenile removal counts.}
+\item{match_bt4}{Option to follow the procedures used by BT4 program. BT4 excludes mini-jacks for both adult and juvenile removal counts. If one choosed no ("n"), mini-jacks would be included in the juvenile removal counts.}
 }
 \value{
 Survivals, detection and returing adult counts
