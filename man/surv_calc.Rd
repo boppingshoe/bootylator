@@ -31,7 +31,7 @@ Estimate survivals, detections, and tally adult returns
 }
 \examples{
 for(i in 1:10){
-  results<- surv_calc(detect_data, i, nocc=8, wt='y', wt_i='y', phi_p_only='y')
+  results<- surv_calc(detect_data, i, nocc=8, wt='n', wt_i='n', phi_p_only='y', fpc='y') # no need to specify match_bt4 if phi_p_only = 'y'
 }
 results
 
