@@ -14,3 +14,6 @@ If you can't install *devtools*, it's probably that you need *Rtools* on your co
 ```{r, eval=FALSE}
 devtools::install_github("boppingshoe/bootylator")
 ```
+
+For further information on survival estimation and boostrap methods for CSS:  
+McCann, J., B. Chockley, E. Cooper, B. Hsu, H. Schaller, S. Haeseker, R. Lessard, C. Petrosky, T. Copeland, E. Tinus, E. Van Dyke, A. Storch and D. Rawding. 2017. Comparative survival study of PIT-tagged spring/summer/fall Chinook, summer steelhead, and sockeye, 2017 Annual Report. Project No. 19960200.
