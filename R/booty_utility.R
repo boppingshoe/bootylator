@@ -20,7 +20,10 @@ format_dat<- function(file_name, wgt){
       'tag_date', 'tag_file', 'wt', 'flags', 'tag_rem')
   }
   # yomama <- subset(yomama_in, , c(1,4,16,17,18,23, grep('flag', names(yomama_in))))
-  yomama <- subset(yomama_in, , c(1,4,16,grep('BOA', names(yomama_in))[1],ifelse(grepl('BOA', names(yomama_in)[18]), 17, 18),23, grep('flag', names(yomama_in))))
+  yomama <- subset(yomama_in, ,
+    c(1,4,16, grep('BOA', names(yomama_in))[1],
+      ifelse(grepl('BOA', names(yomama_in)[18]), 17, 18),
+      23, grep('flag', names(yomama_in))))
   n_col<- ncol(yomama)
   if(n_col==6) {
     names(yomama)<- c("tag_id","burnham","twx","boa","return","rel_date")
@@ -51,8 +54,7 @@ format_dat<- function(file_name, wgt){
   fdat$group<- yomama$group
 
   if(wgt=='y'){
-    trim.trailing <- function (x) sub("\\s+$", "", x)
-    fdat$brood<- trim.trailing(yomama$brood)
+    fdat$brood<- trimws(yomama$brood)
     cw<- as.numeric(readline(prompt = 'Integrated: '))
     ad<- as.numeric(readline(prompt = 'Segregated: '))
     intgr<- cw/(cw+ad)
