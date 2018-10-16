@@ -393,7 +393,7 @@ bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', m
   out$coord_id<- d$coord_id[1]
 
   if(phi_p_only== 'y') {
-    out <- as.data.frame(out)
+    out <- out[, -c('tag_site', 'rel_site', 'coord_id')]
     colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)))
   } else if(wgt== 'y') {
     colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'AD_R', 'AD_T', 'CW_R', 'CW_T', 'tag_site', 'rel_site', 'coord_id')
