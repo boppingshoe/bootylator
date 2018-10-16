@@ -209,10 +209,7 @@ format_dat<- function(file_name, wgt){
 #' @param match_bt4 Option to follow the procedures used by BT4 program. BT4 excludes mini-jacks for both adult and juvenile removal counts. If one choosed no ("n"), mini-jacks would be included in the juvenile removal counts.
 #' @return Survivals, detection and returing adult counts
 #' @examples
-#' for(i in 1:10){
-#'   results<- surv_calc(detect_data, i, nocc=8, wt='n', wt_i='n', phi_p_only='y', fpc='y') # no need to specify match_bt4 if phi_p_only = 'y'
-#' }
-#' results
+#' surv_calc(detect_data, i, nocc=8, wt='n', wt_i='n', phi_p_only='y', fpc='y') # no need to specify match_bt4 if phi_p_only = 'y'
 #'
 surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
   # breakdown of int_t, int_r, seg_t, and seg_r ----
@@ -396,6 +393,7 @@ bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', m
   out$coord_id<- d$coord_id[1]
 
   if(phi_p_only== 'y') {
+    out <- as.data.frame(out)
     colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)))
   } else if(wgt== 'y') {
     colnames(out) <- c(paste0('phi',1:(n_occ-2)), paste0('p',2:(n_occ-1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'AD_R', 'AD_T', 'CW_R', 'CW_T', 'tag_site', 'rel_site', 'coord_id')

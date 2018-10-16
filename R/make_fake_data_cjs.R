@@ -6,7 +6,7 @@
 #' @param mrkd Indicates amount of fish released.
 #' @param remv Indicates the portion of fish removed (transported or died).
 #' @param n_occ Number of events/detection.
-#' @param intgr Portion of "intergrated" group. Intergrated + Segregatred = 1.
+#' @param intgr Portion of "integrated" group. Integrated + Segregated = 1.
 #' @param surv_diff Difference in survival between the intergrated and segregated groups.
 #' @param grp_t Portion of transported group. Group T + Group R = 1
 #' @param adu_rtn Adult return rate.

@@ -1,0 +1,122 @@
+---
+title: "Bootylator: a bootstrap simulator for estimating survivals"
+author: "Bobby Hsu"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Bootylator: a bootstrap simulator for estimating survivals}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = FALSE, message = FALSE}
+knitr::opts_chunk$set(collapse = T, comment = "#>")
+library(bootylator)
+```
+
+## Background
+
+The CSS/FPC bootstrap program (i.e. the BT series) was first developed by FPC biometrician Tom Berggren and programmer Henry Franzoni in the early 2000's. The BT programs were initially written in the FoxPro programming language, and later translated into C# by FPC programmer Sergei Rassk. Began in 2011, with the increasing popularity of R statistical software, FPC biometrician Jack Tuomikoski started developing a new version of bootstrap program to run simulations and process results using a suite of R functions (i.e. `bootstrapper`, `release`, and `DoCalcs`). As of 2018 CSS annual report, CSS/FPC had been conducting bootstrap simulations using both BT and Tuomikoski's bootstrap programs.
+
+FPC continued to develop bootstrap program with two goals in mind. First, FPC would like to migrate all bootstrap programs to a single platform. Second, the bootstrap programs would preferably be written in R, so future updates and improvements could be done by FPC biologists or biometrician. In 2017, FPC developed `bootylator` package that bundled R functions to run CSS bootstraps and export results. `bootylator` retained all functionalities of BT and Tuomikoski's bootstrap programs, including weighted bootstrap. And `bootylator` added new capabilities such as finite population correction that would allow a more robust estimation with small sample size and avoid getting results with NA's. `bootylator` also included a function to simulate fake mark-recapture data for research purpose.
+
+The basic procedures for using `bootylator` to estimate CSS survivals are the following:
+
+* Loading and formatting data.
+
+* Run bootstrap simulation.
+
+* Output results.
+
+Additional functionalities of `bootylator`:
+
+* Calculate point estimates for survivals and detection without bootstrap.
+
+* Generate fake mark-recapture data for simulation studies.
+
+
+## Loading and Formatting Data
+
+`format_dat()` formats the designated csv file before bootstrapping. The csv file should be set up in the same format as for BT series and Tuomikoski's bootstrap program. `format_dat()` flags and identifies fish that have questionable burnham histories (type "y" to see the list).
+
+```{r}
+dat_in<- format_dat(file_name='SR WCH 2017 AGCW.csv', wgt='n')
+```
+
+
+## Run the Bootstrap
+
+`bootystrapper()` is the function for running the bootstrap simulation. User specifies number of iterations, options for weighted bootstrap, option for finite population correction, and option for matching outputs from BT4 program. Users can also specify to only get estimates for reach survival and detection (and omit other metrics).
+
+```{r}
+booty<- bootystrapper(dat_in, surv_calc, iter=10, wgt='n', wgt_init='n', fpc='y', match_bt4='y', phi_p_only='n')
+```
+
+`bootystrapper()` shows a progress bar and prints processing time at the end.
+
+
+## Output
+
+To summarize and export the results, use `doCalcs_v3()` for Snake River or `doCalcs_uc()` for upper Columbia. Bootstrap results are saved in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and parameter output in csv file in current working directory. Exporting results is suppressed for the example below.
+
+```{r}
+ans<- doCalcs_v3(booty, reaches=6, makefile='n')
+print(format(ans[,c(2,5)], scientific = F))
+```
+
+
+## Additional Functionalities
+
+*Point Estimates for Survivals and Detection*
+
+`surv_calc()` can be used as a stand-alone function to calculate reach survivals and detection.
+
+```{r}
+pt_est<- surv_calc(dat_in, i=1, nocc=8, wt='n', wt_i='n', phi_p_only='y', fpc='y')
+colnames(pt_est)<- c(paste0('s', 1:6), paste0('p', 2:7))
+print(pt_est)
+```
+
+`marray()` can be used to extract m-array table.
+
+```{r}
+m_ij<- marray(dat_in, n_occ=8)
+dimnames(m_ij)<-  list(1:7, c('R(i)', 'j=2', 3:8, 'r(i)'))
+print(m_ij)
+```
+
+*Simulation Study*
+
+`siml_cjs()` creates a fake detection history based on user specifications.
+
+* *big_phi* sets reach survivals. it has *n_occ- 1* columns and *mrkd* rows.
+* *big_p* sets detection probabilities for each reach. It has the same dimension as *big_phi*.
+* *mrkd* indicates amount of fish released.
+* *remv* indicates the portion of fish removed (transported or died).
+* *n_occ* is the number of events/detection.
+* *intgr* is the portion of "integrated" group. Integrated + Segregated = 1.
+* *surv_diff* identifies the difference in survival between the integrated and segregated groups.
+* *grp_t* is the portion of transported group. Group T + Group R = 1
+* *adu_rtn* is the adult return rate.
+
+```{r}
+n_occ<- 8
+mrkd<- 10
+phi_real<- rep(0.8, n_occ-1) # set survival
+p_real<- rep(0.45, n_occ-1) # set detection
+remv<- 0.01 # portion removed at occ 2 and 3
+intgr<- 0.23
+surv_diff<- 0.07
+grp_t<- 0.7
+adu_rtn<- 0.02
+big_phi<- matrix(phi_real, ncol= n_occ-1, nrow= mrkd)
+big_p<- matrix(p_real, ncol= n_occ-1, nrow= mrkd)
+
+ch<- siml_cjs(big_phi, big_p, mrkd, remv, n_occ, intgr, surv_diff, grp_t, adu_rtn)
+ch
+```
+
+
+
+
+
