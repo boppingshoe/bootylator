@@ -209,7 +209,7 @@ format_dat<- function(file_name, wgt){
 #' @param match_bt4 Option to follow the procedures used by BT4 program. BT4 excludes mini-jacks for both adult and juvenile removal counts. If one choosed no ("n"), mini-jacks would be included in the juvenile removal counts.
 #' @return Survivals, detection and returing adult counts
 #' @examples
-#' surv_calc(detect_data, i, nocc=8, wt='n', wt_i='n', phi_p_only='y', fpc='y') # no need to specify match_bt4 if phi_p_only = 'y'
+#' surv_calc(detect_data, i=1, nocc=8, wt='n', wt_i='n', phi_p_only='y', fpc='y') # no need to specify match_bt4 if phi_p_only = 'y'
 #'
 surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
   # breakdown of int_t, int_r, seg_t, and seg_r ----

@@ -69,9 +69,10 @@ print(format(ans[,c(2,5)], scientific = F))
 
 *Point Estimates for Survivals and Detection*
 
-`surv_calc()` can be used as a stand-alone function to calculate reach survivals and detection.
+`surv_calc()` can be used as a stand-alone function to calculate reach survivals and detection. Capture histories are the only information needed for an input file. Each capture event, including release, should have its own column. Specified number of occasion should match the number of column of capture history input file. Options for weighting (*wt* and *wt_i*) are not applicable, and should be specified as *"n"*. *phi_p_only* enables calculations only for survivals and detection. Outputs are not labelled, but they are organized as survivals and then detection probabilities. For example, if there are four occasions, the output will be organized as S1, S2, S3, p2, p3, and p4.
 
 ```{r}
+dat_in[1:5, 1:8]
 pt_est<- surv_calc(dat_in, i=1, nocc=8, wt='n', wt_i='n', phi_p_only='y', fpc='y')
 colnames(pt_est)<- c(paste0('s', 1:6), paste0('p', 2:7))
 print(pt_est)
