@@ -103,13 +103,13 @@ print(m_ij)
 ```{r}
 n_occ<- 8
 mrkd<- 10
-phi_real<- rep(0.8, n_occ-1) # set survival
+phi_real<- rep(0.9, n_occ-1) # set survival
 p_real<- rep(0.45, n_occ-1) # set detection
 remv<- 0.01 # portion removed at occ 2 and 3
 intgr<- 0.23
 surv_diff<- 0.07
 grp_t<- 0.7
-adu_rtn<- 0.02
+adu_rtn<- 0.05
 big_phi<- matrix(phi_real, ncol= n_occ-1, nrow= mrkd)
 big_p<- matrix(p_real, ncol= n_occ-1, nrow= mrkd)
 

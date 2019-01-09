@@ -40,6 +40,8 @@ siml_cjs<- function(big_phi, big_p, mrkd, remv, n_occ, intgr, surv_diff, grp_t, 
     prob=c(grp_r, grp_t), replace=TRUE)
   CH$prob<- ifelse(CH[,n_occ+1]=='CW', intgr/sum(CH[,n_occ+1]=='CW'),
                    segr/sum(CH[,n_occ+1]=='AD'))
+  CH$age_boa<- NA
+  CH$age_rtn<- NA
 
   for(i in 1:mrkd){
     CH[i,1]<- 1 # first detection
@@ -57,10 +59,10 @@ siml_cjs<- function(big_phi, big_p, mrkd, remv, n_occ, intgr, surv_diff, grp_t, 
     if(sur==0) next
     adu<- rbinom(1, 1, adu_rtn) # x% adult return (for all)
     #ifelse(sum(CH[i,2:n_occ])==0, adu<- rbinom(1,1,0.05), adu<- rbinom(1,1,0.01))
-    ifelse(adu==1, CH$age_boa[i]<- sample(c(0,1,2,3), size=1,
-      prob=c(0.26, 0.34, 0.39, 0.01)), CH$age_boa[i]<- NA) # assign age
-    ifelse(!is.na(CH$age_boa), CH$age_rtn[i]<- sample(c(NA,0,1,2,3), size=1,
-      prob=c(0.49, 0.01, 0.22, 0.27, 0.01)), CH$age_rtn[i]<- NA) # assign age
+    CH$age_boa[i]<- ifelse(adu==1, sample(c(0,1,2,3), size=1,
+      prob=c(0.26, 0.34, 0.39, 0.01)), CH$age_boa[i]) # assign age
+    CH$age_rtn[i]<- ifelse(!is.na(CH$age_boa[i]), sample(c(NA,0,1,2,3), size=1,
+      prob=c(0.49, 0.01, 0.22, 0.27, 0.01)), CH$age_rtn[i]) # assign age
   } # fish i
   # tallying using the corrected data set ----
   # adult counts using age_rtn
