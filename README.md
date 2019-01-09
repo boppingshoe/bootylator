@@ -12,7 +12,7 @@ install.packages("devtools")
 
 If you can't install *devtools*, it's probably that you need *Rtools* on your computer first (https://cran.r-project.org/bin/windows/Rtools/). After installing *Rtools* (if you haven't already), you can now install *bootylator* from GitHub:
 ```{r, eval=FALSE}
-devtools::install_github("boppingshoe/bootylator")
+devtools::install_github("boppingshoe/bootylator", build_vignettes = TRUE)
 ```
 
 For further information on survival estimation and bootstrap methods for CSS:  
