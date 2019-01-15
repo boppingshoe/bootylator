@@ -61,28 +61,32 @@ exactci <- function(x, n, conflev){
 # from http://users.stat.ufl.edu/~aa/cda/R/one-sample/R1/index.html
 # date of visit: 1/14/2019
 
-get.CIs <- function(data){
-  n<- length(data)- 1
-  result <- data.frame(0,0,0,0,0,0,0,0,0,0)
+get.CIs <- function(data, exci='n', exfn, x, n, conflev, ...){
+  n_dat<- length(data)- 1
+  result <- data.frame(0,0,0,0,0,0,0,0,0,0, NA,NA)
   names(result) <- c("initial", "np_90cill", "np_90ciul", "boots_avg",
-    "boots_std", "cv", "p_90cill", "p_90ciul",
-    "np_95cill", "np_95ciul")
+    "boots_std", "cv", "p_90cill", "p_90ciul", "np_95cill", "np_95ciul",
+    "ex_90cill", "ex_90ciul")
   result$initial    <- data[1]
   result$np_90cill  <- quantile(data, 0.05, na.rm= TRUE)
   result$np_90ciul  <- quantile(data, 0.95, na.rm= TRUE)
   result$boots_avg  <- mean(data[-1], na.rm= TRUE)
-  result$boots_std  <- sqrt(var(data[-1], na.rm= TRUE)*(n-1)/n) # pop'n sd
+  result$boots_std  <- sqrt(var(data[-1], na.rm= TRUE)*(n_dat-1)/n_dat) # pop'n sd
   result$cv         <- result$boots_std/result$boots_avg
   result$p_90cill   <- result$boots_avg - 1.645*result$boots_std
   result$p_90ciul   <- result$boots_avg + 1.645*result$boots_std
   result$np_95cill  <- quantile(data, 0.025, na.rm= TRUE)
   result$np_95ciul  <- quantile(data, 0.975, na.rm= TRUE)
+  if (exci== 'y') {
+    result$ex_90cill<- exfn(x, n, conflev=0.9)[1]
+    result$ex_90ciul<- exfn(x, n, conflev=0.9)[2]
+  }
 
   return(result)
 }
 fill.CIs <- function(data){
-  result <- data.frame(data[1],data[1],data[1],data[1],data[1],data[1],data[1],data[1],data[1],data[1])
-  names(result) <- c("initial", "np_90cill", "np_90ciul", "boots_avg", "boots_std", "cv", "p_90cill", "p_90ciul", "np_95cill", "np_95ciul")
+  result <- data.frame(data[1],data[1],data[1],data[1],data[1],data[1],data[1],data[1],data[1],data[1], NA,NA)
+  names(result) <- c("initial", "np_90cill", "np_90ciul", "boots_avg", "boots_std", "cv", "p_90cill", "p_90ciul", "np_95cill", "np_95ciul", "ex_90cill", "ex_90ciul")
   return(result)
 }
 
@@ -397,7 +401,7 @@ releaseCRT <- fill.CIs(R1)
 # releaseT   <- fill.CIs(t$r1)
 # releaseR   <- fill.CIs(r$r1)
 # BSreaches  <- fill.CIs(crt$numreaches)
-doCalcsreaches <- reaches
+doCalcsreaches <- fill.CIs(reaches)
 
 #
 releaseT   <- get.CIs(R1.)
@@ -432,17 +436,25 @@ delta3 <- get.CIs(delta3.)
 delta4 <- get.CIs(delta4.)    # got an issue here (what issue?)
 
 SR   <- get.CIs(vc_cjs)
-C0   <- get.CIs(sar_c0_cjs) *100
-C1   <- get.CIs(sar_c1_cjs) *100
-T0   <- get.CIs(sart0cjsad) *100
-Tx   <- get.CIs(sart1cjsad) *100
+C0   <- get.CIs(sar_c0_cjs* 100, exci='y',
+  exactci, x=c0adults[1], n=c0_cjs[1])
+C1   <- get.CIs(sar_c1_cjs* 100, exci='y',
+  exactci, x=c1adults.[1], n=c1_cjsNEW[1])
+T0   <- get.CIs(sart0cjsad* 100, exci='y',
+  exactci, x=t0adults.[1], n=t0_cjs[1])
+Tx   <- get.CIs(sart1cjsad* 100, exci='y',
+  exactci, x=t1adults.[1], n=t1_cjs[1])
 TIR  <- get.CIs(t1_c0_cjsu)
 D    <- get.CIs(d_tm1_cjsu)
 
-C0Modified   <- get.CIs(sar_c0_cjsMod) *100
-C1Modified   <- get.CIs(sar_c1_cjsMod) *100
-T0Modified   <- get.CIs(sart0cjsadMod) *100
-TxModified   <- get.CIs(sart1cjsadMod) *100
+C0Modified   <- get.CIs(sar_c0_cjsMod* 100, exci='y',
+  exactci, x=c0adults[1], n=c0_cjsMod[1])
+C1Modified   <- get.CIs(sar_c1_cjsMod* 100, exci='y',
+  exactci, x=c1adults.[1], n=c1_cjsNEWMod[1])
+T0Modified   <- get.CIs(sart0cjsadMod* 100, exci='y',
+  exactci, x=t0adults.[1], n=t0_cjsMod[1])
+TxModified   <- get.CIs(sart1cjsadMod* 100, exci='y',
+  exactci, x=t1adults.[1], n=t1_cjsMod[1])
 TIRModified  <- get.CIs(t1_c0_cjsuMod)
 DModified    <- get.CIs(d_tm1_cjsuMod)
 
@@ -450,15 +462,22 @@ Pr_T         <- get.CIs(pr_trans_new)
 Pr_C0        <- get.CIs(pr_c0_new)
 Pr_C1        <- get.CIs(pr_c1_new)
 
-overallSAR   <- get.CIs(sar_tws_cr) *100
-overallSAR_gj   <- get.CIs(sar_tws_cr_gj) *100
-overallSAR_b   <- get.CIs(sar_tws_cr_b) *100
-overallSAR_bj   <- get.CIs(sar_tws_cr_bj) *100
+overallSAR   <- get.CIs(sar_tws_cr* 100, exci='y',
+  exactci, x=totaladult.[1], n=popula_cjs.[1])
+overallSAR_gj   <- get.CIs(sar_tws_cr_gj* 100, exci='y',
+  exactci, x=totaladult_gj.[1], n=popula_cjs.[1])
+overallSAR_b   <- get.CIs(sar_tws_cr_b* 100, exci='y',
+  exactci, x=totaladult_b.[1], n=popula_cjs.[1])
+overallSAR_bj   <- get.CIs(sar_tws_cr_bj* 100, exci='y',
+  exactci, x=totaladult_bj.[1], n=popula_cjs.[1])
 LGRpop       <- get.CIs(popula_cjs.)
 
-sarLGR <- get.CIs(sarLGR.) * 100
-sarLGS <- get.CIs(sarLGS.) * 100
-sarLMN <- get.CIs(sarLMN.) * 100
+sarLGR <- get.CIs(sarLGR.* 100, exci='y',
+  exactci, x=lgradults.[1], n=x12.[1])
+sarLGS <- get.CIs(sarLGS.* 100, exci='y',
+  exactci, x=lgsadults.[1], n=x1a2.[1])
+sarLMN <- get.CIs(sarLMN.* 100, exci='y',
+  exactci, x=lmnadults.[1], n=x1aa2.[1])
 
 adultLGR <- get.CIs(lgradults.)
 adultLGS <- get.CIs(lgsadults.)
@@ -489,56 +508,49 @@ C1popModified <- get.CIs(c1_cjsNEWMod)
 #wrangle format and output------------------------------------------------------
 #choose parameters:
 parm <- c(
-          #general stuff for evaluation; has various reach survival versions
-          'doCalcsreaches', #'BSreaches',
-          'releaseCRT', 'releaseT', #'releaseR',
-          'SR_0expan', 'SR_1expan', 'SR_2expan', 'SR_3expan',
-          'S1', 'S2', 'S3', 'S4',
-          'S5', 'S6', 'SR', 'S2.3', 'S2.3.4', 'S5.6',    ##adding for LGR-MCN S2.3.4, and S5.6 for MCN-BON
+  # general stuff for evaluation; has various reach survival versions
+  'doCalcsreaches', #'BSreaches',
+  'releaseCRT', 'releaseT', #'releaseR',
+  'SR_0expan', 'SR_1expan', 'SR_2expan', 'SR_3expan',
+  'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'SR', 'S2.3',
+  'S2.3.4', 'S5.6', ##adding for LGR-MCN S2.3.4, and S5.6 for MCN-BON
 
-          'p2', 'p3', 'p4', 'p5', 'p6', 'p7',
+  'p2', 'p3', 'p4', 'p5', 'p6', 'p7',
 
-          #overall SARs [from T group]
-          'overallSAR', 'overallSAR_gj', 'overallSAR_b', 'overallSAR_bj',
-#
-#          #for SARs by route of passage or component SARs and proportion for each
-          'TIR', 'D',
-          'C0', 'C1', 'Tx',
-#
-#          #adults
-          'C0adults',
-          'C1adults',
-          'Txadults',
-          'adults_g',
-          'adults_gj',
-          'adults_b',
-          'adults_bj',
-#
-          #smolt populations
-          'LGRpop',
-          'C0pop', 'C1pop', 'Txpop',
-#
-#          #with modified s2*s3 truncated at 1.00
-          'TIRModified', 'DModified',
-          'C0Modified', 'C1Modified', 'TxModified',
-#
-          'C0popModified', 'C1popModified', 'TxpopModified',
-#
-#          #for the proportion transport appendix
-          'delta2', 'delta3', 'delta4',
-          'Pr_T', 'Pr_C0', 'Pr_C1',
-#
-#          #for the transport SARS appendix
-          'x12', 'x1a2', 'x1aa2',
-          'sarLGR', 'adultLGR',
-          'sarLGS', 'adultLGS',
-          'sarLMN', 'adultLMN',
-#
-#          #LGR equivalents of McNary Transports [T group]
-          'MCNtransLGRequival')
-#
+  # overall SARs [from T group]
+  'overallSAR', 'overallSAR_gj', 'overallSAR_b', 'overallSAR_bj',
+
+  # for SARs by route of passage or component SARs and proportion for each
+  'TIR', 'D', 'C0', 'C1', 'Tx',
+
+  # adults
+  'C0adults', 'C1adults', 'Txadults',
+  'adults_g', 'adults_gj', 'adults_b', 'adults_bj',
+
+  # smolt populations
+  'LGRpop', 'C0pop', 'C1pop', 'Txpop',
+
+  # with modified s2*s3 truncated at 1.00
+  'TIRModified', 'DModified',
+  'C0Modified', 'C1Modified', 'TxModified',
+  'C0popModified', 'C1popModified', 'TxpopModified',
+
+  # for the proportion transport appendix
+  'delta2', 'delta3', 'delta4',
+  'Pr_T', 'Pr_C0', 'Pr_C1',
+
+  # for the transport SARS appendix
+  'x12', 'x1a2', 'x1aa2',
+  'sarLGR', 'adultLGR',
+  'sarLGS', 'adultLGS',
+  'sarLMN', 'adultLMN',
+
+  # LGR equivalents of McNary Transports [T group]
+  'MCNtransLGRequival'
+  )
+
 ansDF <- get(parm[1])
-for(i in parm[-1]){ansDF <- rbind(ansDF, get(i))}
+for(i in parm[-1]) {ansDF <- rbind(ansDF, get(i))}
 ans <- cbind(parm, ansDF)
 
 

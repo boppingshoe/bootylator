@@ -161,7 +161,7 @@ if (makefile == 'y' | makefile == 'Y') {
   channel <- odbcDriverConnect("case=nochange;
     Description=CSSOUTPUT;
     DRIVER=SQL Server;
-    SERVER=PITTAG_SQL6;
+    SERVER=PITTAG_2016SQL;
     UID=sa;
     PWD=frznool;
     WSID=CUTTHROAT;
@@ -187,7 +187,7 @@ if (makefile == 'y' | makefile == 'Y') {
   channel2 <- odbcDriverConnect("case=nochange;
                                 Description=CSSREPORT;
                                 DRIVER=SQL Server;
-                                SERVER=PITTAG_SQL6;
+                                SERVER=PITTAG_2016SQL;
                                 UID=sa;
                                 PWD=frznool;
                                 WSID=CUTTHROAT;
