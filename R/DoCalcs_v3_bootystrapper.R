@@ -3,6 +3,7 @@
 #'
 #' @param crt Bootstrap output as input file here.
 #' @param reaches Number of reach expansion. Default is 6.
+#' @param species "CH" if the species was Chinook. "ELSE" for all others.
 #' @param target The name of the original input file (eg. SR HCH 2015 MCCA).
 #' @param css_group CSS group from the CSSGroups_LookupTable.
 #' @param makefile Save bootstrap output in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.
@@ -13,7 +14,7 @@
 #' print(format(ans, scientific = F))
 
 
-doCalcs_v3 <- function(crt, reaches=6, target, css_group, makefile='y', ...) {
+doCalcs_v3 <- function(crt, reaches=6, species, target, css_group, makefile='y', ...) {
 
 #------------------------------------------------------------------------------
 # Modified from doCalcs_v3 (by Jack Tuomikoski)
@@ -35,6 +36,30 @@ roundT <- function(x, ...){
 
 # 90%,95% non parametric CI function similar to the old bootstrap program
 # [[modified order, 7-24-2013 JET]]
+
+exactci <- function(x, n, conflev){
+  alpha <- (1- conflev)
+  if (x == 0) {
+    ll <- 0
+    ul <- 1 - (alpha/ 2)^ (1/ n) # qbeta(1- alpha/ 2, x+ 1, n- x)
+  }
+  else if (x == n) {
+    ll <- (alpha/ 2)^ (1/ n)
+    ul <- 1
+  }
+  else {
+    ll <- 1/ (1+ (n- x+ 1)/ (x* qf(alpha/ 2, 2* x, 2* (n- x+ 1))) )
+    ul <- 1/ (1+ (n- x)/
+        ((x+ 1) * qf(1- alpha/ 2, 2* (x+ 1), 2* (n- x))) )
+  }
+  c(ll, ul)
+}
+# Computes the Clopper/Pearon exact ci
+# for a binomial success probability
+# for x successes out of n trials with
+# confidence coefficient conflev
+# from http://users.stat.ufl.edu/~aa/cda/R/one-sample/R1/index.html
+# date of visit: 1/14/2019
 
 get.CIs <- function(data){
   n<- length(data)- 1
@@ -116,37 +141,70 @@ m14       <- crt$m14
 # m13.      <- crt$m13t #
 # m14.      <- crt$m14t #
 
-c0adults  <- round(crt$C0adult_rtn,0)
-c0adults. <- round(crt$C0adult_t_rtn,0)
-c1adults. <- round(crt$C1adult_rtn,0)
-t0adults. <- round(crt$T0adult_rtn,0)
-t1adults. <- round(crt$Txadult_rtn,0)
+# 1/15/2019 added ifelse statements for chinooka and "others" counting methods
+if (species== 'CH') { # chinooka don't count jack
+  c0adults  <- round(crt$C0adult_rtn, 0)
+  c0adults. <- round(crt$C0adult_t_rtn, 0)
+  c1adults. <- round(crt$C1adult_rtn, 0)
+  t0adults. <- round(crt$T0adult_rtn, 0)
+  t1adults. <- round(crt$Txadult_rtn, 0)
+} else {
+  c0adults  <- round(crt$C0adultj_rtn, 0)
+  c0adults. <- round(crt$C0adultj_t_rtn, 0)
+  c1adults. <- round(crt$C1adultj_rtn, 0)
+  t0adults. <- round(crt$T0adultj_rtn, 0)
+  t1adults. <- round(crt$Txadultj_rtn, 0)
+}
 
-###May not need to explicitly label these since the output would be the overall SAR by location and with and without jacks assigned in next section
-c0adults_gj.  <- round(crt$C0adultj_t_rtn,0)
-c1adults_gj. <- round(crt$C1adultj_rtn,0)
-t0adults_gj. <- round(crt$T0adultj_rtn,0)
-t1adults_gj. <- round(crt$Txadultj_rtn,0)
+### May not need to explicitly label these since the output would be the overall SAR by location and with and without jacks assigned in next section
+c0adults_gj.  <- round(crt$C0adultj_t_rtn, 0)
+c1adults_gj. <- round(crt$C1adultj_rtn, 0)
+t0adults_gj. <- round(crt$T0adultj_rtn, 0)
+t1adults_gj. <- round(crt$Txadultj_rtn, 0)
 
-c0adults_b. <- round(crt$C0adult_t_boa,0)
-c1adults_b. <- round(crt$C1adult_boa,0)
-t0adults_b. <- round(crt$T0adult_boa,0)
-t1adults_b. <- round(crt$Txadult_boa,0)
+if (species == 'CH') { # chinooka don't count jack
+  c0adults_b. <- round(crt$C0adult_t_boa, 0)
+  c1adults_b. <- round(crt$C1adult_boa, 0)
+  t0adults_b. <- round(crt$T0adult_boa, 0)
+  t1adults_b. <- round(crt$Txadult_boa, 0)
+} else {
+  c0adults_b. <- round(crt$C0adultj_t_boa, 0)
+  c1adults_b. <- round(crt$C1adultj_boa, 0)
+  t0adults_b. <- round(crt$T0adultj_boa, 0)
+  t1adults_b. <- round(crt$Txadultj_boa, 0)
+}
 
-c0adults_bj. <- round(crt$C0adultj_t_boa,0)
-c1adults_bj. <- round(crt$C1adultj_boa,0)
-t0adults_bj. <- round(crt$T0adultj_boa,0)
-t1adults_bj. <- round(crt$Txadult_boa,0)
+c0adults_bj. <- round(crt$C0adultj_t_boa, 0)
+c1adults_bj. <- round(crt$C1adultj_boa, 0)
+t0adults_bj. <- round(crt$T0adultj_boa, 0)
+t1adults_bj. <- round(crt$Txadult_boa, 0)
 
-totaladult. <- round((crt$C0adult_t_rtn + crt$C1adult_rtn + crt$Txadult_rtn),0)
-totaladult_gj. <- round((crt$C0adultj_t_rtn + crt$C1adultj_rtn + crt$Txadultj_rtn),0)
-totaladult_b. <- round((crt$C0adult_t_boa + crt$C1adult_boa + crt$Txadult_boa),0)
-totaladult_bj. <- round((crt$C0adultj_t_boa + crt$C1adultj_boa + crt$Txadultj_boa),0)
+# deal with steelhead and sockeye not having 'jacks'
+if (species== 'CH') {
+  totaladult.<- round(crt$C0adult_t_rtn+ crt$C1adult_rtn+ crt$Txadult_rtn)
+  totaladult_gj.<- round(crt$C0adultj_t_rtn+ crt$C1adultj_rtn+ crt$Txadultj_rtn)
+  totaladult_b.<- round(crt$C0adult_t_boa+ crt$C1adult_boa+ crt$Txadult_boa)
+  totaladult_bj.<- round(crt$C0adultj_t_boa+ crt$C1adultj_boa+ crt$Txadultj_boa)
+} else {
+  totaladult.<- totaladult_gj.<-
+    round(crt$C0adultj_t_rtn+ crt$C1adultj_rtn+ crt$Txadultj_rtn)
+  # totaladult_gj.<- round(crt$C0adultj_t_rtn+ crt$C1adultj_rtn+ crt$Txadultj_rtn)
+  totaladult_b.<- totaladult_bj.<-
+    round(crt$C0adultj_t_boa+ crt$C1adultj_boa+ crt$Txadultj_boa)
+  # totaladult_bj.<- round(crt$C0adultj_t_boa+ crt$C1adultj_boa+ crt$Txadultj_boa)
+}
 
-#make sure for Tx SARs to LGS and LMM use the lgsadults2_gra and lmnadults2_gra for the Xa2 and xaa2 seen or unseen above post-2005.
-lgradults. <- round(crt$lgradult_rtn,0)
-lgsadults. <- round(crt$lgsadult_rtn,0)
-lmnadults. <- round(crt$lmnadult_rtn,0)
+# make sure for Tx SARs to LGS and LMM use the lgsadults2_gra and lmnadults2_gra for the Xa2 and xaa2 seen or unseen above post-2005.
+if (species== 'CH') {
+  lgradults. <- round(crt$lgradult_rtn, 0)
+  lgsadults. <- round(crt$lgsadult_rtn, 0)
+  lmnadults. <- round(crt$lmnadult_rtn, 0)
+} else {
+  lgradults. <- round(crt$lgradultj_rtn, 0)
+  lgsadults. <- round(crt$lgsadultj_rtn, 0)
+  lmnadults. <- round(crt$lmnadultj_rtn, 0)
+}
+
 
 #reaches <- 6 for an example plug in
 #juvenile survival--------------------------------------------------------------
@@ -252,9 +310,10 @@ c0_cjsMod   <- roundT(popula_cjs - m12 - m13 / s2_cjs - m14 /(s2s3_cjsMod)     -
 # c1_cjsMod   <- roundT(m12. - delta2. + (m13. - delta3.) / s2_cjs + (m14. - delta4.) /(s2s3_cjsMod    ) - delta1)
 
 #c1 smolts at LGR [[new]]
-c1_cjsNEW     <- roundT(R1. * s1_cjs * ((p2 + (1-p2)*p3 + (1-p2)*(1-p3)*p4)) - (delta2. + (delta3. / s2_cjs) + (delta4. / (s2_cjs * s3_cjs)) + delta1))
+c1_cjsNEW     <- roundT(R1. * s1_cjs * (p2 + (1-p2)*p3 + (1-p2)*(1-p3)*p4) -
+    (delta2. + (delta3. / s2_cjs) + (delta4. / (s2_cjs * s3_cjs)) + delta1))
 c1_cjsNEWMod  <- roundT(R1. * s1_cjs * (p2 + (1-p2)*p3 + (1-p2)*(1-p3)*p4) -
-			  (delta2. + (delta3. / s2_cjs) + (delta4. / (s2s3_cjsMod    )) + delta1))
+		(delta2. + (delta3. / s2_cjs) + (delta4. / (s2s3_cjsMod    )) + delta1))
 
 #SAR, TIR, and D----------------------------------------------------------------
 #a.k.a. C0 SAR
@@ -262,7 +321,7 @@ sar_c0_cjs   <- c0adults  / c0_cjs
 sar_c0_cjsMod<- c0adults  / c0_cjsMod
 
 #a.k.a. C1 SAR [[new version]]
-sar_c1_cjs   <- c1adults.  / c1_cjsNEWMod
+sar_c1_cjs   <- c1adults.  / c1_cjsNEW
 sar_c1_cjsMod<- c1adults.  / c1_cjsNEWMod
 
 #a.k.a. T0 SAR
@@ -492,7 +551,7 @@ if (makefile == 'y' | makefile == 'Y') {
   channel <- odbcDriverConnect("case=nochange;
                                 Description=CSSOUTPUT;
                                 DRIVER=SQL Server;
-                                SERVER=PITTAG_SQL6;
+                                SERVER=PITTAG_2016SQL;
                                 UID=sa;
                                 PWD=frznool;
                                 WSID=CUTTHROAT;
@@ -518,7 +577,7 @@ if (makefile == 'y' | makefile == 'Y') {
   channel2 <- odbcDriverConnect("case=nochange;
                                 Description=CSSREPORT;
                                 DRIVER=SQL Server;
-                                SERVER=PITTAG_SQL6;
+                                SERVER=PITTAG_2016SQL;
                                 UID=sa;
                                 PWD=frznool;
                                 WSID=CUTTHROAT;
