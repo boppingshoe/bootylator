@@ -60,8 +60,8 @@ booty<- bootystrapper(dat_in, surv_calc, iter=10, wgt='n', wgt_init='n', fpc='y'
 To summarize and export the results, use `doCalcs_v3()` for Snake River or `doCalcs_uc()` for upper Columbia. Bootstrap results are saved in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and parameter output in csv file in current working directory. Exporting results is suppressed for the example below.
 
 ```{r}
-ans<- doCalcs_v3(booty, reaches=6, makefile='n')
-print(format(ans[,c(2,5)], scientific = F))
+ans<- doCalcs_v3(booty, species='CH', reaches=6, makefile='n')
+print(format(ans[,c(2,5,3,4,12,13)], scientific = F))
 ```
 
 
