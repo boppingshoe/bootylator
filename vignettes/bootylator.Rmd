@@ -61,7 +61,7 @@ To summarize and export the results, use `doCalcs_v3()` for Snake River or `doCa
 
 ```{r}
 ans<- doCalcs_v3(booty, species='CH', reaches=6, makefile='n')
-print(format(ans[,c(2,5,3,4,12,13)], scientific = F))
+print(format(ans[,c(2,5,3)], scientific = F))
 ```
 
 
