@@ -9,8 +9,7 @@
 #' @return Survivals,detection, adult counts, and SARs...
 #' @examples
 #' ans<- doCalcs_uc(crt, target='CR_USK_2015_OKAN_MCJ', css_group='OKSR', makefile='y')
-#' round(ans, 3)
-#' print(format(ans, scientific = F))
+#' format(ans, scientific = F)
 
 
 doCalcs_uc <- function(crt, target, css_group, makefile='y', ...){
