@@ -9,9 +9,8 @@
 #' @param makefile Save bootstrap output in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.
 #' @return Survivals,detection, adult counts, and SARs...
 #' @examples
-#' ans<- doCalcs_v3(crt, reaches=6, target='SR HCH 2015 MCCA', css_group='MCCA', makefile='y')
-#' round(ans, 3)
-#' print(format(ans, scientific = F))
+#' ans<- doCalcs_v3(crt, reaches=6, species='CH', target='SR HCH 2015 MCCA', css_group='MCCA', makefile='y')
+#' format(ans, scientific = F)
 
 
 doCalcs_v3 <- function(crt, reaches=6, species, target, css_group, makefile='y', ...) {
