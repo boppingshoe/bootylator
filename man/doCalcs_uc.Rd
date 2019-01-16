@@ -23,6 +23,5 @@ Take bootstrap output and return summary data for all annual report/web table fo
 }
 \examples{
 ans<- doCalcs_uc(crt, target='CR_USK_2015_OKAN_MCJ', css_group='OKSR', makefile='y')
-round(ans, 3)
-print(format(ans, scientific = F))
+format(ans, scientific = F)
 }

@@ -4,7 +4,8 @@
 \alias{siml_cjs}
 \title{data simulation for single release, diff surv for int and seg groups}
 \usage{
-siml_cjs(big_phi, big_p, mrkd, remv, n_occ, intgr, surv_diff, grp_t, adu_rtn)
+siml_cjs(big_phi, big_p, mrkd, remv, n_occ, intgr, surv_diff, grp_t,
+  adu_rtn)
 }
 \arguments{
 \item{big_phi}{Set reach survivals.}
@@ -17,7 +18,7 @@ siml_cjs(big_phi, big_p, mrkd, remv, n_occ, intgr, surv_diff, grp_t, adu_rtn)
 
 \item{n_occ}{Number of events/detection.}
 
-\item{intgr}{Portion of "intergrated" group. Intergrated + Segregatred = 1.}
+\item{intgr}{Portion of "integrated" group. Integrated + Segregated = 1.}
 
 \item{surv_diff}{Difference in survival between the intergrated and segregated groups.}
 

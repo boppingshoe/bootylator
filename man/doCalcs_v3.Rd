@@ -4,12 +4,15 @@
 \alias{doCalcs_v3}
 \title{Take bootstrap output and return summary data for all annual report/web table for Snake River fish}
 \usage{
-doCalcs_v3(crt, reaches = 6, target, css_group, makefile = "y", ...)
+doCalcs_v3(crt, reaches = 6, species, target, css_group,
+  makefile = "y", ...)
 }
 \arguments{
 \item{crt}{Bootstrap output as input file here.}
 
 \item{reaches}{Number of reach expansion. Default is 6.}
+
+\item{species}{"CH" if the species was Chinook. "ELSE" for all others.}
 
 \item{target}{The name of the original input file (eg. SR HCH 2015 MCCA).}
 
@@ -24,7 +27,6 @@ Survivals,detection, adult counts, and SARs...
 Take bootstrap output and return summary data for all annual report/web table for Snake River fish
 }
 \examples{
-ans<- doCalcs_v3(crt, reaches=6, target='SR HCH 2015 MCCA', css_group='MCCA', makefile='y')
-round(ans, 3)
-print(format(ans, scientific = F))
+ans<- doCalcs_v3(crt, reaches=6, species='CH', target='SR HCH 2015 MCCA', css_group='MCCA', makefile='y')
+format(ans, scientific = F)
 }
