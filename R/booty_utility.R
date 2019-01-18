@@ -2,38 +2,56 @@
 #' Import and format data for ready to use by \code{surv_calc()}
 #'
 #' @param file_name File path where the input csv file is stored.
+#' @param mig_yr Migration year.
 #' @param wgt "y" if using weighted sampling probability. User will be prompted to enter the amount of intergrated and segregated fish.
 #' @return Capture history and indicators for adult return.
 #' @examples
 #' detect_data<- format_dat('C:/Users/bobbyhsu/Documents/Temp/SR HCH 2014 MCCA.csv', wgt='n')
 #'
-format_dat<- function(file_name, wgt){
+format_dat<- function(file_name, mig_yr='auto', wgt){
   # importing data files and select the wanted columns ----
   # the 'burnham' here is actually the capture_di from the original data file
   yomama_in<- read.csv(file=file_name)#, na.strings= c('','NA'))
-  if(names(yomama_in)[1]!='tag_id') {
+  # name columns when there was no nomes
+  if (names(yomama_in)[1]!='tag_id' & ncol(yomama_in)==31) {
     yomama_in<- read.csv(file=file_name, header = FALSE)
     names(yomama_in)<- c('tag_id', 'burnham_hi', 'length', 'capture_di', 'mort',
       'transport', 'GRJ_OBS',	'GRX_OBS', 'GOJ_OBS',	'LMJ_OBS', 'ICH_OBS',	'MCJ_OBS',
       'JDJ_OBS',	'BON_OBS', 'MCA_OBS',	'TWX_OBS', 'BOA_OBS',	'GRA_OBS', 'srrt',
       'tag_site', 'rel_site', 'coord_id',	'rel_date',	'river_km',	'migr_yr', 'flag',
       'tag_date', 'tag_file', 'wt', 'flags', 'tag_rem')
+  } else if (names(yomama_in)[1]!='tag_id' & ncol(yomama_in)!= 31) {
+    stop('Data file was not read properly.
+      Amount of columns in the data source did not match the usual format.')
   }
   # yomama <- subset(yomama_in, , c(1,4,16,17,18,23, grep('flag', names(yomama_in))))
   yomama <- subset(yomama_in, ,
-    c(1,4,16, grep('BOA', names(yomama_in))[1],
-      ifelse(grepl('BOA', names(yomama_in)[18]), 17, 18),
-      23, grep('flag', names(yomama_in))))
+    c(1,4,16, # grab tag_id, capture_di, TWX_BOA
+      grep('BOA', names(yomama_in))[1], # grab BOA_OBS
+      ifelse(grepl('BOA', names(yomama_in)[18]), 17, 18), # GRA_OBS
+      23, grep('flag', names(yomama_in)))) # rel_date, flag and flags, if exist
   n_col<- ncol(yomama)
-  if(n_col==6) {
+  if (n_col==6) {
     names(yomama)<- c("tag_id","burnham","twx","boa","return","rel_date")
     yomama$group<- 'T'
-  } else if(n_col==7) {
+  } else if (n_col==7) {
     names(yomama)<- c("tag_id","burnham","twx","boa","return","rel_date","group")
-  } else if(n_col==8) {
+  } else if (n_col==8) {
     names(yomama)<- c("tag_id","burnham","twx","boa","return","rel_date","group","brood")
-  } else stop('Data file is not read properly. Make sure data source is in the correct format.')
-  n_occ<- nchar(yomama$burnham[1])+1
+  } else {
+    stop('Data file was not read properly.
+      Make sure data source was in the correct format.')
+  }
+  n_occ<- nchar(yomama$burnham[1])+ 1
+  if (mig_yr=='auto') { # grab migration year from file name
+    migyr<- as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))
+  } else { # user set migration year
+    migyr<- mig_yr
+  }
+  if (migyr!= as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))) {
+    proceed<- readline('Migration year entered did not match the data file name. Proceed still (y/n)? ')
+    if (proceed=='n') stop('Data processing stopped.')
+  } # check if migration match file name
   # ----
 
   # create detection history ----
@@ -44,7 +62,7 @@ format_dat<- function(file_name, wgt){
   }
   # adding TWX as the last detection
   fdat[,n_occ]<- ifelse(yomama$twx==''|is.na(yomama$twx), 0, 1)
-  colnames(fdat)<- paste0('occ',1:n_occ)
+  colnames(fdat)<- paste0('occ', 1:n_occ)
   # if(n_occ==8) colnames(fdat)<- c('rel','grj','goj','lmj','mcj','jdj','bon','twx')
   # ----
 
@@ -63,13 +81,13 @@ format_dat<- function(file_name, wgt){
                           segr/sum(fdat$brood=='AD'))
   } else fdat$prob<- 1/nrow(fdat)
 
-  fdat$rel_date<- as.Date(substr(yomama$rel_date, 1,10))
-  yomama$boa[grepl("^ *$",yomama$boa)]<- NA
-  yomama$return[grepl("^ *$",yomama$return)]<- NA
-  fdat$boa<- as.Date(substr(yomama$boa, 1,10))
-  fdat$return<- as.Date(substr(yomama$return, 1,10))
+  fdat$rel_date<- as.Date(substr(yomama$rel_date, 1, 10))
+  yomama$boa[grepl("^ *$", yomama$boa)]<- NA
+  yomama$return[grepl("^ *$", yomama$return)]<- NA
+  fdat$boa<- as.Date(substr(yomama$boa, 1, 10))
+  fdat$return<- as.Date(substr(yomama$return, 1, 10))
   # grab migration year from file name
-  migyr<- as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))
+  # migyr<- as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))
   # age calculated using BOA_OBS (here is named 'boa')
   fdat$age_boa<- as.numeric(format(fdat$boa, '%Y'))- migyr
   # age calculated using GRA_OBS, MCN_OBS, or BOA_OBS2 (here is named 'return')

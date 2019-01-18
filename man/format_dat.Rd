@@ -4,10 +4,12 @@
 \alias{format_dat}
 \title{Import and format data for ready to use by \code{surv_calc()}}
 \usage{
-format_dat(file_name, wgt)
+format_dat(file_name, mig_yr = "auto", wgt)
 }
 \arguments{
 \item{file_name}{File path where the input csv file is stored.}
+
+\item{mig_yr}{Migration year.}
 
 \item{wgt}{"y" if using weighted sampling probability. User will be prompted to enter the amount of intergrated and segregated fish.}
 }
