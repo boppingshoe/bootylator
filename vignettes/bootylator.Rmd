@@ -40,7 +40,7 @@ Additional functionalities of `bootylator`:
 `format_dat()` formats the designated csv file before bootstrapping. The csv file should be set up in the same format as for BT series and Tuomikoski's bootstrap program. `format_dat()` flags and identifies fish that have questionable burnham histories (type "y" to see the list).
 
 ```{r}
-dat_in<- format_dat(file_name='SR WCH 2017 AGCW.csv', wgt='n')
+dat_in<- format_dat(file_name='SR HCH 2016 CLWH_SU_new_format.csv', mig_yr=2016, wgt='n')
 ```
 
 

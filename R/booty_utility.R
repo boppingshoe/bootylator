@@ -8,41 +8,34 @@
 #' @examples
 #' detect_data<- format_dat('C:/Users/bobbyhsu/Documents/Temp/SR HCH 2014 MCCA.csv', wgt='n')
 #'
-format_dat<- function(file_name, mig_yr='auto', wgt){
-  # importing data files and select the wanted columns ----
-  # the 'burnham' here is actually the capture_di from the original data file
+format_dat<- function(file_name, mig_yr='auto', wgt, old_format='n'){
+  # importing data files ----
   yomama_in<- read.csv(file=file_name)#, na.strings= c('','NA'))
-  # name columns when there was no nomes
-  if (names(yomama_in)[1]!='tag_id' & ncol(yomama_in)==31) {
-    yomama_in<- read.csv(file=file_name, header = FALSE)
-    names(yomama_in)<- c('tag_id', 'burnham_hi', 'length', 'capture_di', 'mort',
-      'transport', 'GRJ_OBS',	'GRX_OBS', 'GOJ_OBS',	'LMJ_OBS', 'ICH_OBS',	'MCJ_OBS',
-      'JDJ_OBS',	'BON_OBS', 'MCA_OBS',	'TWX_OBS', 'BOA_OBS',	'GRA_OBS', 'srrt',
-      'tag_site', 'rel_site', 'coord_id',	'rel_date',	'river_km',	'migr_yr', 'flag',
-      'tag_date', 'tag_file', 'wt', 'flags', 'tag_rem')
-  } else if (names(yomama_in)[1]!='tag_id' & ncol(yomama_in)!= 31) {
-    stop('Data file was not read properly.
-      Amount of columns in the data source did not match the usual format.')
-  }
-  # yomama <- subset(yomama_in, , c(1,4,16,17,18,23, grep('flag', names(yomama_in))))
-  yomama <- subset(yomama_in, ,
-    c(1,4,16, # grab tag_id, capture_di, TWX_BOA
-      grep('BOA', names(yomama_in))[1], # grab BOA_OBS
-      ifelse(grepl('BOA', names(yomama_in)[18]), 17, 18), # GRA_OBS
-      23, grep('flag', names(yomama_in)))) # rel_date, flag and flags, if exist
-  n_col<- ncol(yomama)
-  if (n_col==6) {
-    names(yomama)<- c("tag_id","burnham","twx","boa","return","rel_date")
-    yomama$group<- 'T'
-  } else if (n_col==7) {
-    names(yomama)<- c("tag_id","burnham","twx","boa","return","rel_date","group")
-  } else if (n_col==8) {
-    names(yomama)<- c("tag_id","burnham","twx","boa","return","rel_date","group","brood")
+  if (sum(grepl('tag_id', names(yomama_in)))!= 1) {
+    stop('Data processing stopped.
+      Data column names missing.')
+  }  # abort when columns have no names
+
+  # select columns needed ----
+  # GRA_OBS for snake, MCA_OBS for others
+  yomama<- yomama_in[, c(grep('tag_id', names(yomama_in)),
+    grep('ncapture2', names(yomama_in)), grep('BOA_OBS', names(yomama_in)),
+    grep('MCA_OBS', names(yomama_in)), grep('GRA_OBS', names(yomama_in)),
+    grep('flag', names(yomama_in)), grep('rel_date', names(yomama_in)))]
+  if (old_format=='y') yomama$TWX_OBS<- yomama_in$TWX_OBS
+  if (ncol(yomama)==7) { # should only have 7 columns
+  names(yomama)<- c("tag_id","capture","boa","return","group","brood","rel_date")
+  } else if (ncol(yomama)==8 & old_format=='y') { # with twx
+    names(yomama)<- c("tag_id","capture","boa",
+      "return","group","brood","rel_date","twx")
   } else {
-    stop('Data file was not read properly.
-      Make sure data source was in the correct format.')
+    stop('Data processing stopped.
+      Data file contained both MCA_OBS and GRA_OBS
+      (cannot distinguish between Snake and Columbia fish).')
   }
-  n_occ<- nchar(yomama$burnham[1])+ 1
+  if (any(names(yomama_in)=='MCA_OBS')) {
+    yomama$group<- 'T'
+  }
   if (mig_yr=='auto') { # grab migration year from file name
     migyr<- as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))
   } else { # user set migration year
@@ -52,22 +45,29 @@ format_dat<- function(file_name, mig_yr='auto', wgt){
     proceed<- readline('Migration year entered did not match the data file name. Proceed still (y/n)? ')
     if (proceed=='n') stop('Data processing stopped.')
   } # check if migration match file name
-  # ----
 
   # create detection history ----
-  fdat<- as.data.frame(matrix(0, nrow=nrow(yomama), ncol=n_occ))
-  fdat[,1]<- 1
-  for(t in 2:(n_occ-1)){
-    fdat[,t]<- as.numeric(substr(yomama$burnham, t, t))
+  n_occ<- nchar(yomama$capture[1])
+  if (old_format=='n') {
+    fdat<- as.data.frame(matrix(0, nrow=nrow(yomama), ncol=n_occ))
+    fdat[,1]<- 1
+    for(t in 2:n_occ){
+      fdat[,t]<- as.numeric(substr(yomama$capture, t, t))
+    }
+  } else { # with twx
+    fdat<- as.data.frame(matrix(0, nrow=nrow(yomama), ncol=n_occ))
+    fdat[,1]<- 1
+    for(t in 2:(n_occ-1)){
+      fdat[,t]<- as.numeric(substr(yomama$capture, t, t))
+    }
+    # adding TWX as the last detection
+    fdat[,n_occ]<- ifelse(yomama$twx==''|is.na(yomama$twx), 0, 1)
   }
-  # adding TWX as the last detection
-  fdat[,n_occ]<- ifelse(yomama$twx==''|is.na(yomama$twx), 0, 1)
   colnames(fdat)<- paste0('occ', 1:n_occ)
-  # if(n_occ==8) colnames(fdat)<- c('rel','grj','goj','lmj','mcj','jdj','bon','twx')
-  # ----
 
   # add columns before original order is altered ----
-  fdat$burnham<- apply(fdat[,1:n_occ], 1 , function(x) paste0(x, collapse=''))
+  # fdat$capture<- apply(fdat[,1:n_occ], 1 , function(x) paste0(x, collapse=''))
+  fdat$capture<- yomama$capture
   fdat$tag_id<- yomama$tag_id
   fdat$group<- yomama$group
 
@@ -86,13 +86,10 @@ format_dat<- function(file_name, mig_yr='auto', wgt){
   yomama$return[grepl("^ *$", yomama$return)]<- NA
   fdat$boa<- as.Date(substr(yomama$boa, 1, 10))
   fdat$return<- as.Date(substr(yomama$return, 1, 10))
-  # grab migration year from file name
-  # migyr<- as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))
   # age calculated using BOA_OBS (here is named 'boa')
   fdat$age_boa<- as.numeric(format(fdat$boa, '%Y'))- migyr
-  # age calculated using GRA_OBS, MCN_OBS, or BOA_OBS2 (here is named 'return')
+  # age calculated using GRA_OBS or MCA_OBS (here is named 'return')
   fdat$age_rtn<- as.numeric(format(fdat$return, '%Y'))- migyr
-  # ----
 
   # correct records with detection after 2 or 3 ----
   # (order will be altered after correction)
@@ -102,11 +99,11 @@ format_dat<- function(file_name, mig_yr='auto', wgt){
     return(x)
   }
 
-  tempset<- fdat[grep('[23]', fdat$burnham),]
+  tempset<- fdat[grep('[23]', fdat$capture),]
   if(nrow(tempset)> 0){
     posi<- apply(tempset[,1:n_occ], 1, function(x) grep('[23]', x)[1])
 
-    badId23<- tempset[grepl('[123]', substr(tempset$burnham, posi+1, n_occ)), 'tag_id']
+    badId23<- tempset[grepl('[123]', substr(tempset$capture, posi+1, n_occ)), 'tag_id']
     badId23<- badId23[!is.na(badId23)]
     if(length(badId23)> 0){
       tmp23<- apply(subset(fdat, tag_id%in%badId23, 1:n_occ), 1, correct)
@@ -115,20 +112,19 @@ format_dat<- function(file_name, mig_yr='auto', wgt){
       fdat<- rbind( tmp23, subset(fdat,!(tag_id%in%badId23)) )
 
       posi2<- apply(tmp23[,1:n_occ], 1, function(x) grep('[23]', x))
-      qnable<- tmp23[as.numeric(substr(tmp23$burnham, posi2+1, n_occ))!=1, ]
+      qnable<- tmp23[as.numeric(substr(tmp23$capture, posi2+1, n_occ))!=1, ]
 
       if(nrow(qnable)> 0){
         toshow<- readline(prompt= paste('I found', nrow(qnable),
             'questionable fish. Would you like to see the list (y/shush)? '))
         if(toshow=='y') print(qnable[, c(paste0('occ',1:n_occ),
-        'burnham', 'tag_id', 'group', 'rel_date')], max.print=1e+06)
+        'capture', 'tag_id', 'group', 'rel_date')], max.print=1e+06)
       }
     }
   }
-  # ----
 
   # tallying using the corrected data set ----
-  # adult counts using GRA_OBS, MCN_OBS, or BOA_OBS2 (aka 'return')
+  # adult counts using GRA_OBS or MCA_OBS (aka 'return')
   fdat$ac0_rtn<- ifelse(fdat[,2]==0& fdat[,3]==0& fdat[,4]==0& fdat$age_rtn>1, 1, 0)
   fdat$ac0j_rtn<- ifelse(fdat[,2]==0& fdat[,3]==0& fdat[,4]==0& fdat$age_rtn>0, 1, 0)
 
@@ -142,22 +138,22 @@ format_dat<- function(file_name, mig_yr='auto', wgt){
                            fdat$age_rtn>0, 1, 0)
 
   fdat$atx_rtn<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)&
-      substr(fdat$burnham,2,(n_occ-1))==
+      substr(fdat$capture,2,(n_occ-1))==
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
       fdat$age_rtn>1, 1, 0)
   fdat$atxj_rtn<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)&
-      substr(fdat$burnham,2,(n_occ-1))==
+      substr(fdat$capture,2,(n_occ-1))==
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
       fdat$age_rtn>0, 1, 0)
 
   fdat$at0_rtn<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2) &
       fdat[,2]!=1 & fdat[,3]!=1 & fdat[,4]!=1 &
-      substr(fdat$burnham,2,(n_occ-1))==
+      substr(fdat$capture,2,(n_occ-1))==
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = '')) &
       fdat$age_rtn>1, 1, 0)
   fdat$at0j_rtn<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2) &
       fdat[,2]!=1 & fdat[,3]!=1 & fdat[,4]!=1 &
-      substr(fdat$burnham,2,(n_occ-1))==
+      substr(fdat$capture,2,(n_occ-1))==
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
       fdat$age_rtn>0, 1, 0)
   # adult counts using BOA_OBS (aka 'boa')
@@ -174,22 +170,22 @@ format_dat<- function(file_name, mig_yr='auto', wgt){
       fdat$age_boa>0, 1, 0)
 
   fdat$atx_boa<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)&
-      substr(fdat$burnham,2,(n_occ-1))==
+      substr(fdat$capture,2,(n_occ-1))==
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
       fdat$age_boa>1, 1, 0)
   fdat$atxj_boa<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2)&
-      substr(fdat$burnham,2,(n_occ-1))==
+      substr(fdat$capture,2,(n_occ-1))==
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
       fdat$age_boa>0, 1, 0)
 
   fdat$at0_boa<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2) &
       fdat[,2]!=1 & fdat[,3]!=1 & fdat[,4]!=1 &
-      substr(fdat$burnham,2,(n_occ-1))==
+      substr(fdat$capture,2,(n_occ-1))==
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
       fdat$age_boa>1, 1, 0)
   fdat$at0j_boa<- ifelse((fdat[,2]==2|fdat[,3]==2|fdat[,4]==2) &
       fdat[,2]!=1 & fdat[,3]!=1 & fdat[,4]!=1 &
-      substr(fdat$burnham,2,(n_occ-1))==
+      substr(fdat$capture,2,(n_occ-1))==
       apply(fdat[,2:(n_occ-1)],1, function(x)paste(x,collapse = ''))&
       fdat$age_boa>0, 1, 0)
 
@@ -204,9 +200,8 @@ format_dat<- function(file_name, mig_yr='auto', wgt){
   fdat$d51<- ifelse(fdat$c0type==0& (fdat[,5]==2|fdat[,5]==3), 1, 0)
   fdat$d61<- ifelse(fdat$c0type==0& (fdat[,6]==2|fdat[,6]==3), 1, 0)
   fdat$d71<- ifelse(fdat$c0type==0& (fdat[,7]==2|fdat[,7]==3), 1, 0)
-  # ----
 
-  # add identifiers
+  # add identifiers ----
   fdat$tag_site<- yomama_in$tag_site
   fdat$rel_site<- yomama_in$rel_site
   fdat$coord_id<- yomama_in$coord_id
@@ -282,31 +277,31 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
 
   cht<- subset(ch, group=='T')
   if(match_bt4=='n'){
-    x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(burnham,3,nocc-1))==0)),
-      nrow(subset(cht, occ3==2 & as.numeric(substr(burnham,4,nocc-1))==0)),
-      nrow(subset(cht, occ4==2 & as.numeric(substr(burnham,5,nocc-1))==0)),
+    x_t<- cbind(nrow(subset(cht, occ2==2 & as.numeric(substr(capture,3,nocc-1))==0)),
+      nrow(subset(cht, occ3==2 & as.numeric(substr(capture,4,nocc-1))==0)),
+      nrow(subset(cht, occ4==2 & as.numeric(substr(capture,5,nocc-1))==0)),
       ifelse(nocc>4, nrow(subset(cht, occ5==2 &
-          as.numeric(substr(burnham,6,nocc-1))==0)), NA)) # t group
+          as.numeric(substr(capture,6,nocc-1))==0)), NA)) # t group
   } else {
     # BT4 doesn't count smolts that return as mini-jacks
     # do this to match BT4 counts
     x_t<- cbind(nrow(subset(cht, occ2==2 &
-        as.numeric(substr(burnham,3,nocc-1))==0 &
+        as.numeric(substr(capture,3,nocc-1))==0 &
         (age_rtn!=0|is.na(age_rtn)))),
       nrow(subset(cht, occ3==2 &
-          as.numeric(substr(burnham,4,nocc-1))==0 &
+          as.numeric(substr(capture,4,nocc-1))==0 &
           (age_rtn!=0|is.na(age_rtn)))),
       nrow(subset(cht, occ4==2 &
-          as.numeric(substr(burnham,5,nocc-1))==0 &
+          as.numeric(substr(capture,5,nocc-1))==0 &
           (age_rtn!=0|is.na(age_rtn)))),
       ifelse(nocc>4, nrow(subset(cht, occ5==2 &
-          as.numeric(substr(burnham,6,nocc-1))==0 &
+          as.numeric(substr(capture,6,nocc-1))==0 &
           (age_rtn!=0|is.na(age_rtn)))), NA)) # t group
   }
 
   x_0<- cbind(nrow(cht[cht[,2]==0 & cht[,3]==2,]),
-            nrow(cht[as.numeric(substr(cht$burnham,2,3))==0 & cht[,4]==2,]),
-            nrow(cht[as.numeric(substr(cht$burnham,2,4))==0 & cht[,5]==2,])) # t group
+            nrow(cht[as.numeric(substr(cht$capture,2,3))==0 & cht[,4]==2,]),
+            nrow(cht[as.numeric(substr(cht$capture,2,4))==0 & cht[,5]==2,])) # t group
   d234t<- colSums (cbind(cht$d2, cht$d3, cht$d4)) # t group
   d5671t<- colSums (cbind(cht$d51, cht$d61, cht$d71)) # t group
 
