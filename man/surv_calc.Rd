@@ -30,6 +30,6 @@ Survivals, detection and returing adult counts
 Estimate survivals, detections, and tally adult returns
 }
 \examples{
-surv_calc(detect_data, i=1, nocc=8, wt='n', wt_i='n', phi_p_only='y', fpc='y') # no need to specify match_bt4 if phi_p_only = 'y'
+surv_calc(detect_data, i= 1, nocc= 8, wt= 'n', wt_i= 'n', phi_p_only= 'y', fpc= 'y') # no need to specify match_bt4 if phi_p_only= 'y'
 
 }

@@ -31,7 +31,7 @@ Estimates in a data frame with original estimate as the first row and bootstrap 
 Bootstrap using surv_calc and organize output
 }
 \examples{
-out<- bootystrapper(detect_data, surv_calc, iter=100, n_occ=8, wgt='n', wgt_init='n')
+out<- bootystrapper(detect_data, surv_calc, iter= 100, n_occ= 8, wgt= 'n', wgt_init= 'n')
 head(out)
 
 }

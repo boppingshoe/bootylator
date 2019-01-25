@@ -26,6 +26,6 @@ intgr<- 234012/(234012+813874) # 2014 CW
 segr <- 813874/(234012+813874) # 2014 AD
 # make input file, specify weighted sampling
 wgt_data<- format_dat('C:/Users/bobbyhsu/Documents/Temp/SR HCH 2014 MCCA.csv', wgt='y')
-marray(wgt_data, n_occ=8)
+marray(wgt_data, n_occ= 8)
 
 }

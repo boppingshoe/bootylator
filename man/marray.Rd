@@ -18,6 +18,6 @@ m-ij array
 Construct m-ij array
 }
 \examples{
-marray(detect_data, n_occ=8)
+marray(detect_data, n_occ= 8)
 
 }

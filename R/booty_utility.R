@@ -6,7 +6,7 @@
 #' @param wgt "y" if using weighted sampling probability. User will be prompted to enter the amount of intergrated and segregated fish.
 #' @return Capture history and indicators for adult return.
 #' @examples
-#' detect_data<- format_dat('C:/Users/bobbyhsu/Documents/Temp/SR HCH 2014 MCCA.csv', mig_yr=2014, wgt='n')
+#' detect_data<- format_dat('C:/Users/bobbyhsu/Documents/Temp/SR HCH 2014 MCCA.csv', mig_yr= 2014, wgt= 'n')
 #'
 format_dat<- function(file_name, mig_yr='auto', wgt='n'){
   # importing data files ----
@@ -218,7 +218,7 @@ format_dat<- function(file_name, mig_yr='auto', wgt='n'){
 #' @param match_bt4 Option to follow the procedures used by BT4 program. BT4 excludes mini-jacks for both adult and juvenile removal counts. If one choosed no ("n"), mini-jacks would be included in the juvenile removal counts.
 #' @return Survivals, detection and returing adult counts
 #' @examples
-#' surv_calc(detect_data, i=1, nocc=8, wt='n', wt_i='n', phi_p_only='y', fpc='y') # no need to specify match_bt4 if phi_p_only = 'y'
+#' surv_calc(detect_data, i= 1, nocc= 8, wt= 'n', wt_i= 'n', phi_p_only= 'y', fpc= 'y') # no need to specify match_bt4 if phi_p_only= 'y'
 #'
 surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
   # breakdown of int_t, int_r, seg_t, and seg_r ----
@@ -364,7 +364,7 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
 #' @param match_bt4 Indicate to turn off the match_bt4 option in \code{curv_calc()}. The default here is yes ("y").
 #' @return Estimates in a data frame with original estimate as the first row and bootstrap results in the remaining rows.
 #' @examples
-#' out<- bootystrapper(detect_data, surv_calc, iter=100, n_occ=8, wgt='n', wgt_init='n')
+#' out<- bootystrapper(detect_data, surv_calc, iter= 100, n_occ= 8, wgt= 'n', wgt_init= 'n')
 #' head(out)
 #'
 bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', match_bt4='y', ...){
@@ -429,7 +429,7 @@ bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', m
 #' @param n_occ Total detection events including the trawl.
 #' @return m-ij array
 #' @examples
-#' marray(detect_data, n_occ=8)
+#' marray(detect_data, n_occ= 8)
 #'
 marray<- function(CH, n_occ){
   n_ind<- dim(CH)[1]
@@ -468,7 +468,7 @@ marray<- function(CH, n_occ){
 #' segr <- 813874/(234012+813874) # 2014 AD
 #' # make input file, specify weighted sampling
 #' wgt_data<- format_dat('C:/Users/bobbyhsu/Documents/Temp/SR HCH 2014 MCCA.csv', wgt='y')
-#' marray(wgt_data, n_occ=8)
+#' marray(wgt_data, n_occ= 8)
 #'
 marray_wtd<- function(CH, n_occ){
   n_ind<- dim(CH)[1]

@@ -4,12 +4,12 @@
 \alias{format_dat}
 \title{Import and format data for ready to use by \code{surv_calc()}}
 \usage{
-format_dat(file_name, mig_yr = "auto", wgt)
+format_dat(file_name, mig_yr = "auto", wgt = "n")
 }
 \arguments{
 \item{file_name}{File path where the input csv file is stored.}
 
-\item{mig_yr}{Migration year.}
+\item{mig_yr}{Juvenile migration year.}
 
 \item{wgt}{"y" if using weighted sampling probability. User will be prompted to enter the amount of intergrated and segregated fish.}
 }
@@ -20,6 +20,6 @@ Capture history and indicators for adult return.
 Import and format data for ready to use by \code{surv_calc()}
 }
 \examples{
-detect_data<- format_dat('C:/Users/bobbyhsu/Documents/Temp/SR HCH 2014 MCCA.csv', wgt='n')
+detect_data<- format_dat('C:/Users/bobbyhsu/Documents/Temp/SR HCH 2014 MCCA.csv', mig_yr= 2014, wgt= 'n')
 
 }

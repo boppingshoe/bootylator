@@ -27,6 +27,6 @@ Survivals,detection, adult counts, and SARs...
 Take bootstrap output and return summary data for all annual report/web table for Snake River fish
 }
 \examples{
-ans<- doCalcs_v3(crt, reaches=6, species='CH', target='SR HCH 2015 MCCA', css_group='MCCA', makefile='y')
-format(ans, scientific = F)
+ans<- doCalcs_v3(crt, reaches= 6, species= 'CH', target= 'SR HCH 2015 MCCA', css_group= 'MCCA', makefile= 'y')
+format(ans, scientific= FALSE)
 }
