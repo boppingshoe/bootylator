@@ -2,13 +2,13 @@
 #' Import and format data for ready to use by \code{surv_calc()}
 #'
 #' @param file_name File path where the input csv file is stored.
-#' @param mig_yr Migration year.
+#' @param mig_yr Juvenile migration year.
 #' @param wgt "y" if using weighted sampling probability. User will be prompted to enter the amount of intergrated and segregated fish.
 #' @return Capture history and indicators for adult return.
 #' @examples
-#' detect_data<- format_dat('C:/Users/bobbyhsu/Documents/Temp/SR HCH 2014 MCCA.csv', wgt='n')
+#' detect_data<- format_dat('C:/Users/bobbyhsu/Documents/Temp/SR HCH 2014 MCCA.csv', mig_yr=2014, wgt='n')
 #'
-format_dat<- function(file_name, mig_yr='auto', wgt, old_format='n'){
+format_dat<- function(file_name, mig_yr='auto', wgt='n'){
   # importing data files ----
   yomama_in<- read.csv(file=file_name)#, na.strings= c('','NA'))
   if (sum(grepl('tag_id', names(yomama_in)))!= 1) {
@@ -19,15 +19,11 @@ format_dat<- function(file_name, mig_yr='auto', wgt, old_format='n'){
   # select columns needed ----
   # GRA_OBS for snake, MCA_OBS for others
   yomama<- yomama_in[, c(grep('tag_id', names(yomama_in)),
-    grep('ncapture2', names(yomama_in)), grep('BOA_OBS', names(yomama_in)),
+    grep('capture', names(yomama_in))[1], grep('BOA_OBS', names(yomama_in)),
     grep('MCA_OBS', names(yomama_in)), grep('GRA_OBS', names(yomama_in)),
     grep('flag', names(yomama_in)), grep('rel_date', names(yomama_in)))]
-  if (old_format=='y') yomama$TWX_OBS<- yomama_in$TWX_OBS
   if (ncol(yomama)==7) { # should only have 7 columns
   names(yomama)<- c("tag_id","capture","boa","return","group","brood","rel_date")
-  } else if (ncol(yomama)==8 & old_format=='y') { # with twx
-    names(yomama)<- c("tag_id","capture","boa",
-      "return","group","brood","rel_date","twx")
   } else {
     stop('Data processing stopped.
       Data file contained both MCA_OBS and GRA_OBS
@@ -48,20 +44,10 @@ format_dat<- function(file_name, mig_yr='auto', wgt, old_format='n'){
 
   # create detection history ----
   n_occ<- nchar(yomama$capture[1])
-  if (old_format=='n') {
-    fdat<- as.data.frame(matrix(0, nrow=nrow(yomama), ncol=n_occ))
-    fdat[,1]<- 1
-    for(t in 2:n_occ){
-      fdat[,t]<- as.numeric(substr(yomama$capture, t, t))
-    }
-  } else { # with twx
-    fdat<- as.data.frame(matrix(0, nrow=nrow(yomama), ncol=n_occ))
-    fdat[,1]<- 1
-    for(t in 2:(n_occ-1)){
-      fdat[,t]<- as.numeric(substr(yomama$capture, t, t))
-    }
-    # adding TWX as the last detection
-    fdat[,n_occ]<- ifelse(yomama$twx==''|is.na(yomama$twx), 0, 1)
+  fdat<- as.data.frame(matrix(0, nrow=nrow(yomama), ncol=n_occ))
+  fdat[,1]<- 1
+  for(t in 2:n_occ){
+    fdat[,t]<- as.numeric(substr(yomama$capture, t, t))
   }
   colnames(fdat)<- paste0('occ', 1:n_occ)
 
@@ -81,11 +67,21 @@ format_dat<- function(file_name, mig_yr='auto', wgt, old_format='n'){
                           segr/sum(fdat$brood=='AD'))
   } else fdat$prob<- 1/nrow(fdat)
 
-  fdat$rel_date<- as.Date(substr(yomama$rel_date, 1, 10))
-  yomama$boa[grepl("^ *$", yomama$boa)]<- NA
-  yomama$return[grepl("^ *$", yomama$return)]<- NA
-  fdat$boa<- as.Date(substr(yomama$boa, 1, 10))
-  fdat$return<- as.Date(substr(yomama$return, 1, 10))
+  yomama$boa[grepl("^ *$", yomama$boa)]<- NA # '^' means start of string, '$' end,
+  yomama$return[grepl("^ *$", yomama$return)]<- NA # and '*' includes space or empty
+  if (grepl('/', substr(yomama$rel_date[1], 1,4))|
+      grepl('-', substr(yomama$rel_date[1], 1,4))) {
+    fdat$rel_date<- as.Date(substr(yomama$rel_date, 1, 10),
+      tryFormat= c("%m-%d-%Y", "%m/%d/%Y"))
+    fdat$boa<- as.Date(substr(yomama$boa, 1, 10),
+      tryFormat= c("%m-%d-%Y", "%m/%d/%Y"))
+    fdat$return<- as.Date(substr(yomama$return, 1, 10),
+      tryFormat= c("%m-%d-%Y", "%m/%d/%Y"))
+  } else {
+    fdat$rel_date<- as.Date(substr(yomama$rel_date, 1, 10))
+    fdat$boa<- as.Date(substr(yomama$boa, 1, 10))
+    fdat$return<- as.Date(substr(yomama$return, 1, 10))
+  }
   # age calculated using BOA_OBS (here is named 'boa')
   fdat$age_boa<- as.numeric(format(fdat$boa, '%Y'))- migyr
   # age calculated using GRA_OBS or MCA_OBS (here is named 'return')
