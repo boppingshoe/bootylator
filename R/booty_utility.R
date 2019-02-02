@@ -234,8 +234,8 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
   # elements needed for estimating phi's and p's ----
   m<- c(0, colSums(sim_mary[, 2:nocc]))
   z<- rep(0, (nocc-1))
-  for (i in 1:(nocc-2)){
-    z[i+1]<- sum(sim_mary[1:i,(i+2):nocc])
+  for (t in 1:(nocc-2)){
+    z[t+1]<- sum(sim_mary[1:t,(t+2):nocc])
   }
   R<- sim_mary[1:(nocc-1), 1]
   r<- sim_mary[1:(nocc-1), (nocc+1)]
@@ -352,6 +352,158 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
 }
 
 
+
+# MARK
+#' Estimate survivals/detection using likelihood method, with logit link, and tally adult returns
+#'
+#' @param ch Input file made by \code{format_dat()} function.
+#' @param i Iteration number used by the bootstrap function \code{bootystrapper()}.
+#' @param nocc Total detection events including the trawl.
+#' @param wt Indicates whether to weight the sampling probability (bootstrap only).
+#' @param phi_p_only Option to only calculate survivals and detection and not do the adult counts.
+#' @return Survivals, detection and returing adult counts
+#' @examples
+#' mark_calc(detect_data, i= 1, nocc= 6, wt= 'n', phi_p_only= 'y')
+#'
+mark_calc<- function(ch, i, nocc, wt, phi_p_only, ...){
+  # breakdown of int_t, int_r, seg_t, and seg_r ----
+  # if comment out, make sure change the output in 'bootystrapper()'
+  if(wt=='y') tnr<- unlist(tapply(ch$group, ch$brood, table))
+  else tnr<- table(ch$group)
+  # ----
+  m_data<- mark_dat(ch)
+  dat_proc<- process.data(data=m_data, model='CJS')
+  dat_ddl<- make.design.data(dat_proc)
+  dat_ddl$Phi$fix=ifelse(dat_ddl$Phi$time==(unique(nchar(m_data$ch))-1),1,NA)
+  Phi_t<- list(formula=~time, link='logit')
+  p_t<- list(formula=~time, link='logit')
+  invisible(capture.output(cjs_fit <- mark(data=dat_proc, ddl=dat_ddl,
+    model.parameters=list(Phi=Phi_t, p=p_t),
+    output=FALSE,
+    delete=TRUE)))
+  phi<- summary(cjs_fit)$reals$Phi[[1]]$pim[1, -(nocc-1)]
+  p<- summary(cjs_fit)$reals$p[[1]]$pim[1, -(nocc-1)]
+
+  if(phi_p_only=='y') {
+    calc<- cbind(t(phi), t(p))
+    return(calc)
+    stop()
+  }
+  # ----
+
+  sim_mary<- marray(ch, nocc)
+  # output params
+  # params from crt group ----
+  R1<- sim_mary[1,1]
+  c0a_rtn  <- sum(ch$ac0_rtn, na.rm=TRUE)
+  c0aj_rtn <- sum(ch$ac0j_rtn, na.rm=TRUE)
+  c0a_boa  <- sum(ch$ac0_boa, na.rm=TRUE)
+  c0aj_boa <- sum(ch$ac0j_boa, na.rm=TRUE)
+  d5670<- colSums (cbind(ch$d50, ch$d60, ch$d70))
+  m12<- sim_mary[1,2]
+  m13<- sim_mary[1,3]
+  m14<- sim_mary[1,4]
+  # ----
+  # params from t group ----
+  R1t<- sum(ch$group=='T') # t group
+
+  cht<- subset(ch, group=='T')
+  # BT4 doesn't count smolts that return as mini-jacks
+  # there's an option to count mini-jacks in surv_calc (but not here)
+  x_t<- cbind(nrow(subset(cht, occ2==2 &
+      as.numeric(substr(capture,3,nocc-1))==0 &
+      (age_rtn!=0|is.na(age_rtn)))),
+    nrow(subset(cht, occ3==2 &
+        as.numeric(substr(capture,4,nocc-1))==0 &
+        (age_rtn!=0|is.na(age_rtn)))),
+    nrow(subset(cht, occ4==2 &
+        as.numeric(substr(capture,5,nocc-1))==0 &
+        (age_rtn!=0|is.na(age_rtn)))),
+    ifelse(nocc>4, nrow(subset(cht, occ5==2 &
+        as.numeric(substr(capture,6,nocc-1))==0 &
+        (age_rtn!=0|is.na(age_rtn)))), NA)) # t group
+
+  x_0<- cbind(nrow(cht[cht[,2]==0 & cht[,3]==2,]),
+    nrow(cht[as.numeric(substr(cht$capture,2,3))==0 & cht[,4]==2,]),
+    nrow(cht[as.numeric(substr(cht$capture,2,4))==0 & cht[,5]==2,])) # t group
+  d234t<- colSums (cbind(cht$d2, cht$d3, cht$d4)) # t group
+  d5671t<- colSums (cbind(cht$d51, cht$d61, cht$d71)) # t group
+
+  c0at_rtn <- sum(cht[, 'ac0_rtn'], na.rm=TRUE)  # t group
+  c0ajt_rtn<- sum(cht[, 'ac0j_rtn'], na.rm=TRUE) #
+  c1at_rtn <- sum(cht[, 'ac1_rtn'], na.rm=TRUE)  #
+  c1ajt_rtn<- sum(cht[, 'ac1j_rtn'], na.rm=TRUE) #
+  txat_rtn <- sum(cht[, 'atx_rtn'], na.rm=TRUE)  #
+  txajt_rtn<- sum(cht[, 'atxj_rtn'], na.rm=TRUE) #
+  t0at_rtn <- sum(cht[, 'at0_rtn'], na.rm=TRUE)  #
+  t0ajt_rtn<- sum(cht[, 'at0j_rtn'], na.rm=TRUE) #
+  c0at_boa <- sum(cht[, 'ac0_boa'], na.rm=TRUE)  #
+  c0ajt_boa<- sum(cht[, 'ac0j_boa'], na.rm=TRUE) #
+  c1at_boa <- sum(cht[, 'ac1_boa'], na.rm=TRUE)  #
+  c1ajt_boa<- sum(cht[, 'ac1j_boa'], na.rm=TRUE) #
+  txat_boa <- sum(cht[, 'atx_boa'], na.rm=TRUE)  #
+  txajt_boa<- sum(cht[, 'atxj_boa'], na.rm=TRUE) #
+  t0at_boa <- sum(cht[, 'at0_boa'], na.rm=TRUE)  #
+  t0ajt_boa<- sum(cht[, 'at0j_boa'], na.rm=TRUE) #
+
+  lgr_atx_rtn<-  sum(cht[cht[,2]==2, 'atx_rtn'], na.rm=TRUE)   # t group
+  lgs_atx_rtn<-  sum(cht[cht[,3]==2, 'atx_rtn'], na.rm=TRUE)   #
+  lmn_atx_rtn<-  sum(cht[cht[,4]==2, 'atx_rtn'], na.rm=TRUE)   #
+  lgr_atxj_rtn<- sum(cht[cht[,2]==2, 'atxj_rtn'], na.rm=TRUE)  #
+  lgs_atxj_rtn<- sum(cht[cht[,3]==2, 'atxj_rtn'], na.rm=TRUE)  #
+  lmn_atxj_rtn<- sum(cht[cht[,4]==2, 'atxj_rtn'], na.rm=TRUE)  #
+  # ----
+
+  if(length(tnr)==1) {
+    calc<- cbind(t(phi), t(p), R1, R1t, m12, m13, m14,
+      #m12t, m13t, m14t,
+      x_t, x_0, t(d234t), t(d5671t), t(d5670),
+      c0a_rtn, c0aj_rtn, c0a_boa, c0aj_boa,
+      c0at_rtn, c0ajt_rtn, c1at_rtn, c1ajt_rtn,
+      txat_rtn, txajt_rtn, t0at_rtn, t0ajt_rtn,
+      c0at_boa, c0ajt_boa, c1at_boa, c1ajt_boa,
+      txat_boa, txajt_boa, t0at_boa, t0ajt_boa,
+      lgr_atx_rtn, lgs_atx_rtn, lmn_atx_rtn,
+      lgr_atxj_rtn, lgs_atxj_rtn, lmn_atxj_rtn)
+  } else {calc<- cbind(t(phi), t(p), R1, R1t, m12, m13, m14,
+    #m12t, m13t, m14t,
+    x_t, x_0, t(d234t), t(d5671t), t(d5670),
+    c0a_rtn, c0aj_rtn, c0a_boa, c0aj_boa,
+    c0at_rtn, c0ajt_rtn, c1at_rtn, c1ajt_rtn,
+    txat_rtn, txajt_rtn, t0at_rtn, t0ajt_rtn,
+    c0at_boa, c0ajt_boa, c1at_boa, c1ajt_boa,
+    txat_boa, txajt_boa, t0at_boa, t0ajt_boa,
+    lgr_atx_rtn, lgs_atx_rtn, lmn_atx_rtn,
+    lgr_atxj_rtn, lgs_atxj_rtn, lmn_atxj_rtn,
+    t(tnr))}
+  return(calc)
+}
+
+
+#' Make an ".inp" file for packages RMark.
+#'
+#' @param ch Input file containing capture history (from \code{format_dat()} function).
+#' @return RMark data file
+#' @examples
+#' m_data<- mark_dat(ch)
+#'
+mark_dat<- function(ch) {
+  mdat<- as.data.frame(cbind(do.call(paste0,
+    as.data.frame(ch[, grep('occ', names(ch))], stringsAsFactors=FALSE)
+    ), 1))
+  names(mdat)<- c('ch', 'freq')
+  mdat$freq<- as.numeric(mdat$freq)
+  if (length(mdat[grepl('2', mdat$ch),]$freq)> 0|
+      length(mdat[grepl('3', mdat$ch),]$freq)> 0) {
+    mdat[grepl('2', mdat$ch)|grepl('3', mdat$ch),]$freq<- (-1)
+    mdat$ch<- gsub('2', '1', mdat$ch)
+    mdat$ch<- gsub('3', '1', mdat$ch)
+  }
+  mdat$ch<- as.character(mdat$ch)
+  return(mdat) # this is the same str as the '.inp' file
+}
+
+
 #' Bootstrap using surv_calc and organize output
 #'
 #' @param d Input file made by \code{format_dat()}.
@@ -362,15 +514,21 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
 #' @param phi_p_only Indicate to turn off the phi_p_only option in \code{curv_calc()}. Default is no ("n").
 #' @param fpc Indicate to turn off the fpc option in \code{curv_calc()}. Default is yes ("y").
 #' @param match_bt4 Indicate to turn off the match_bt4 option in \code{curv_calc()}. The default here is yes ("y").
+#' @param logit_link Indicate to use Rmark and estimate using logit link. The default here is no ("n").
 #' @return Estimates in a data frame with original estimate as the first row and bootstrap results in the remaining rows.
 #' @examples
 #' out<- bootystrapper(detect_data, surv_calc, iter= 100, n_occ= 8, wgt= 'n', wgt_init= 'n')
 #' head(out)
 #'
-bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', match_bt4='y', ...){
+bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', match_bt4='y', logit_link='n', ...){
   start_time<- Sys.time()
   n_occ<- sum(grepl('occ', names(d)))
-  original <- fn(d, i=1, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4) #run function on original data
+  #run function on original data
+  if (logit_link=='n') {
+    original <- fn(d, i=1, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4)
+  } else {
+    original <- fn(d, i=1, n_occ, wgt, phi_p_only)
+  }
   #make an output matrix with NA's
   out <- matrix(data=NA, nrow=(iter+1),ncol=length(original))
   # first row name is original
@@ -382,17 +540,34 @@ bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', m
   index <- c(1:length(d$prob))
   #starts loop for number of iterations
   pb <- txtProgressBar(min=2, max=(iter+1), char='x', width=50, style = 3)
-  for (i in (2:(iter+1))){
+  for (i in (2:(iter+1))) {
     # resample index is "resampled" data rows to use
     if (wgt=='y') sample_index <- sample(index, prob=d$prob, replace=T)
     else sample_index <- sample(index, replace=T)
+
     # build resampled data from sample.index
     sample_data <- d[sample_index,]
+
     # run function on resampled data
-    out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4)
-    # print booty progress
-    # if ((i-1) %in% seq(0,iter, by=50)) cat(i-1, ' ')
-    setTxtProgressBar(pb, i)
+    attempt<- 1
+    while(attempt<= 10) {
+      attempt<- attempt+ 1
+      try(
+        if (logit_link=='n') {
+          out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4)
+        } else {
+          out[i,] <- fn(sample_data, i, n_occ, wgt, phi_p_only)
+        }
+      )
+    }
+    # # run function on resampled data
+    # if (logit_link=='n') {
+    #   out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4)
+    # } else {
+    #   out[i,] <- fn(sample_data, i, n_occ, wgt, phi_p_only)
+    # }
+
+    setTxtProgressBar(pb, i) # print booty progress
   } # bootstrap loop
   close(pb)
   # build output matrix and return

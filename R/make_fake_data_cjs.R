@@ -31,13 +31,17 @@ siml_cjs<- function(big_phi, big_p, mrkd, remv, n_occ, intgr, surv_diff, grp_t, 
   segr<- 1- intgr
   grp_r<- 1- grp_t
   CH<- as.data.frame(matrix(0, ncol= n_occ, nrow= mrkd))
-  if(n_occ==8) {colnames(CH)<- c('rel','grj','goj','lmj','mcj','jdj','bon','twx')}
-  CH$brood<- sample(c('CW','AD'), size=mrkd, prob=c(0.5,0.5), replace=TRUE)
+  colnames(CH)<- c(paste0('occ', 1:(n_occ)))
+  CH$capture<- as.integer(cbind(do.call(paste0,
+    as.data.frame(ch[, grep('occ', names(ch))], stringsAsFactors=FALSE)
+  )))
+  CH$brood<- sample(c('CW','AD'), size=mrkd, prob=c(0.5, 0.5), replace=TRUE)
   CH$group<- NA
   CH[CH$brood=='CW',]$group<- sample(c('R','T'), size=sum(CH$brood=='CW'),
     prob=c(grp_r, grp_t), replace=TRUE)
   CH[CH$brood=='AD',]$group<- sample(c('R','T'), size=sum(CH$brood=='AD'),
     prob=c(grp_r, grp_t), replace=TRUE)
+  if(n_occ<8) CH$group<- 'T'
   CH$prob<- ifelse(CH[,n_occ+1]=='CW', intgr/sum(CH[,n_occ+1]=='CW'),
                    segr/sum(CH[,n_occ+1]=='AD'))
   CH$age_boa<- NA
@@ -111,6 +115,9 @@ siml_cjs<- function(big_phi, big_p, mrkd, remv, n_occ, intgr, surv_diff, grp_t, 
   CH$d51<- ifelse(CH$c0type==0& CH[,5]==2|CH[,5]==3, 1, 0)
   CH$d61<- ifelse(CH$c0type==0& CH[,6]==2|CH[,6]==3, 1, 0)
   CH$d71<- ifelse(CH$c0type==0& CH[,7]==2|CH[,7]==3, 1, 0)
+  CH$tag_site<- 'FAKE'
+  CH$rel_site<- 'FAKE'
+  CH$coord_id<- 'FAKE'
   # ----
 
   return(CH)
