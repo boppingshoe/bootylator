@@ -33,7 +33,7 @@ siml_cjs<- function(big_phi, big_p, mrkd, remv, n_occ, intgr, surv_diff, grp_t, 
   CH<- as.data.frame(matrix(0, ncol= n_occ, nrow= mrkd))
   colnames(CH)<- c(paste0('occ', 1:(n_occ)))
   CH$capture<- as.integer(cbind(do.call(paste0,
-    as.data.frame(ch[, grep('occ', names(ch))], stringsAsFactors=FALSE)
+    as.data.frame(CH[, grep('occ', names(CH))], stringsAsFactors=FALSE)
   )))
   CH$brood<- sample(c('CW','AD'), size=mrkd, prob=c(0.5, 0.5), replace=TRUE)
   CH$group<- NA
