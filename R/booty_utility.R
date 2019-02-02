@@ -550,7 +550,7 @@ bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', m
 
     # run function on resampled data
     attempt<- 1
-    while(attempt<= 10) {
+    while(is.null(out[i,]) && attempt<= 10) {
       attempt<- attempt+ 1
       try(
         if (logit_link=='n') {
