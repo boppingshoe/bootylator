@@ -5,7 +5,7 @@
 \title{Bootstrap using surv_calc and organize output}
 \usage{
 bootystrapper(d, fn, iter, wgt, wgt_init, phi_p_only = "n", fpc = "y",
-  match_bt4 = "y", ...)
+  match_bt4 = "y", logit_link = "n", ...)
 }
 \arguments{
 \item{d}{Input file made by \code{format_dat()}.}
@@ -23,6 +23,8 @@ bootystrapper(d, fn, iter, wgt, wgt_init, phi_p_only = "n", fpc = "y",
 \item{fpc}{Indicate to turn off the fpc option in \code{curv_calc()}. Default is yes ("y").}
 
 \item{match_bt4}{Indicate to turn off the match_bt4 option in \code{curv_calc()}. The default here is yes ("y").}
+
+\item{logit_link}{Indicate to use Rmark and estimate using logit link. The default here is no ("n").}
 }
 \value{
 Estimates in a data frame with original estimate as the first row and bootstrap results in the remaining rows.
