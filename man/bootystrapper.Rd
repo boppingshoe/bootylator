@@ -20,11 +20,11 @@ bootystrapper(d, fn, iter, wgt, wgt_init, phi_p_only = "n", fpc = "y",
 
 \item{phi_p_only}{Indicate to turn off the phi_p_only option in \code{curv_calc()}. Default is no ("n").}
 
-\item{fpc}{Indicate to turn off the fpc option in \code{curv_calc()}. Default is yes ("y").}
+\item{fpc}{Indicate to turn off the finite population correction option in \code{curv_calc()}. Default is yes ("y").}
 
 \item{match_bt4}{Indicate to turn off the match_bt4 option in \code{curv_calc()}. The default here is yes ("y").}
 
-\item{logit_link}{Indicate to use Rmark and estimate using logit link. The default here is no ("n").}
+\item{logit_link}{Indicate to use "RMark" or "marked" and estimate using logit link. The default here is none ("n").}
 }
 \value{
 Estimates in a data frame with original estimate as the first row and bootstrap results in the remaining rows.

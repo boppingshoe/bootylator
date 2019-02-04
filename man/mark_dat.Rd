@@ -10,7 +10,7 @@ mark_dat(ch)
 \item{ch}{Input file containing capture history (from \code{format_dat()} function).}
 }
 \value{
-RMark data file
+RMark/marked data file
 }
 \description{
 Make an ".inp" file for packages RMark.

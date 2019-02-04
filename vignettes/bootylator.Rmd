@@ -20,7 +20,7 @@ The CSS/FPC bootstrap program (i.e. the BT series) was first developed by FPC bi
 
 FPC continued to develop bootstrap program with two goals in mind. First, FPC would like to migrate all bootstrap programs to a single platform. Second, the bootstrap programs would preferably be written in R, so future updates and improvements could be done by FPC biologists or biometrician. In 2017, FPC developed `bootylator` package that bundled R functions to run CSS bootstraps and export results. `bootylator` retained all functionalities of BT and Tuomikoski's bootstrap programs, including weighted bootstrap. And `bootylator` added new capabilities such as finite population correction that would allow a more robust estimation with small sample size and avoid getting results with NA's. `bootylator` also included a function to simulate fake mark-recapture data for research purpose.
 
-The basic procedures for using `bootylator` to estimate CSS survivals are the following:
+A basic workflow for `bootylator` to estimate CSS survivals:
 
 * Loading and formatting data.
 
@@ -37,7 +37,7 @@ Additional functionalities of `bootylator`:
 
 ## Loading and Formatting Data
 
-`format_dat()` formats the designated csv file before bootstrapping. The csv file should be set up in the same format as for BT series and Tuomikoski's bootstrap program. `format_dat()` flags and identifies fish that have questionable burnham histories (type "y" to see the list).
+`format_dat()` formats the designated csv file before bootstrapping. The csv file has a standard format and is set by the FPC biologists. `format_dat()` flags and identifies fish that have questionable burnham histories (type "y" to see the list).
 
 ```{r}
 dat_in<- format_dat(file_name='SR HCH 2016 CLWH_SU_new_format.csv', mig_yr=2016, wgt='n')
@@ -46,7 +46,7 @@ dat_in<- format_dat(file_name='SR HCH 2016 CLWH_SU_new_format.csv', mig_yr=2016,
 
 ## Run the Bootstrap
 
-`bootystrapper()` is the function for running the bootstrap simulation. User specifies number of iterations, options for weighted bootstrap, option for finite population correction, and option for matching outputs from BT4 program. Users can also specify to only get estimates for reach survival and detection (and omit other metrics).
+`bootystrapper()` is the function that automates the bootstrap simulation. It takes the estimation function, `surv_cal()` or `mark_calc()`, and run it throung the iteration process.  User specifies number of iterations, options for incorporating weighted bootstrap, finite population correction, and matching outputs from BT4 program. Users can also specify to only get estimates for reach survival and detection (and omit other metrics). `surv_cal()` estimates using closed-formed CJS, and `mark_calc()` calls package *RMARK* or *marked* to estimate survivals using logit link.
 
 ```{r}
 booty<- bootystrapper(dat_in, surv_calc, iter=10, wgt='n', wgt_init='n', fpc='y', match_bt4='y', phi_p_only='n')
@@ -57,10 +57,10 @@ booty<- bootystrapper(dat_in, surv_calc, iter=10, wgt='n', wgt_init='n', fpc='y'
 
 ## Output
 
-To summarize and export the results, use `doCalcs_v3()` for Snake River or `doCalcs_uc()` for upper Columbia. Bootstrap results are saved in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and parameter output in csv file in current working directory. Exporting results is suppressed for the example below.
+To summarize and export the results, use `doCalcs()` for Snake River or `doCalcs_uc()` for upper Columbia. Bootstrap results are saved in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and parameter output in csv file in current working directory. Exporting results is suppressed for the example below.
 
 ```{r}
-ans<- doCalcs_v3(booty, species='CH', reaches=6, makefile='n')
+ans<- doCalcs(booty, species='CH', reaches=6, makefile='n')
 print(format(ans[,c(2,5,3)], scientific = F))
 ```
 
@@ -69,12 +69,11 @@ print(format(ans[,c(2,5,3)], scientific = F))
 
 *Point Estimates for Survivals and Detection*
 
-`surv_calc()` can be used as a stand-alone function to calculate reach survivals and detection. Capture histories are the only information needed for an input file. Each capture event, including release, should have its own column. Specified number of occasion should match the number of column of capture history input file. Options for weighting (*wt* and *wt_i*) are not applicable, and should be specified as *"n"*. *phi_p_only* enables calculations only for survivals and detection. Outputs are not labelled, but they are organized as survivals and then detection probabilities. For example, if there are four occasions, the output will be organized as S1, S2, S3, p2, p3, and p4.
+`surv_calc()` (or `mark_calc()`) can be used as a stand-alone function to calculate reach survivals and detection. Capture histories are the only information needed for an input file. Each capture event, including release, should have its own column. Specified number of occasion should match the number of column of capture history input file. Options for weighting (*wt* and *wt_i*) are not applicable, and should be specified as *"n"*. *phi_p_only* enables calculations only for survivals and detection.
 
 ```{r}
 dat_in[1:5, 1:8]
 pt_est<- surv_calc(dat_in, i=1, nocc=8, wt='n', wt_i='n', phi_p_only='y', fpc='y')
-colnames(pt_est)<- c(paste0('s', 1:6), paste0('p', 2:7))
 print(pt_est)
 ```
 
@@ -82,7 +81,6 @@ print(pt_est)
 
 ```{r}
 m_ij<- marray(dat_in, n_occ=8)
-dimnames(m_ij)<-  list(1:7, c('R(i)', 'j=2', 3:8, 'r(i)'))
 print(m_ij)
 ```
 

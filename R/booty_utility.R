@@ -247,6 +247,7 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
   p  <- m[2:(nocc-1)]/M[2:(nocc-1)]
   if(phi_p_only=='y') {
     calc<- cbind(t(phi), t(p))
+    colnames(calc)<- c(paste0('Phi', 1:(nocc-2)), paste0('p', 2:(nocc-1)))
     return(calc)
     stop()
   }
@@ -352,8 +353,6 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
 }
 
 
-
-# MARK
 #' Estimate survivals/detection using likelihood method, with logit link, and tally adult returns
 #'
 #' @param ch Input file made by \code{format_dat()} function.
@@ -361,31 +360,42 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
 #' @param nocc Total detection events including the trawl.
 #' @param wt Indicates whether to weight the sampling probability (bootstrap only).
 #' @param phi_p_only Option to only calculate survivals and detection and not do the adult counts.
+#' @param logit_link Option to use package "RMark" or "marked" for estimating survival with logit link function. The default is package "RMark."
 #' @return Survivals, detection and returing adult counts
 #' @examples
 #' mark_calc(detect_data, i= 1, nocc= 6, wt= 'n', phi_p_only= 'y')
 #'
-mark_calc<- function(ch, i, nocc, wt, phi_p_only, ...){
+mark_calc<- function(ch, i, nocc, wt, phi_p_only, logit_link='RMark', ...){
   # breakdown of int_t, int_r, seg_t, and seg_r ----
   # if comment out, make sure change the output in 'bootystrapper()'
   if(wt=='y') tnr<- unlist(tapply(ch$group, ch$brood, table))
   else tnr<- table(ch$group)
   # ----
+
   m_data<- mark_dat(ch)
-  dat_proc<- process.data(data=m_data, model='CJS')
-  dat_ddl<- make.design.data(dat_proc)
-  dat_ddl$Phi$fix=ifelse(dat_ddl$Phi$time==(unique(nchar(m_data$ch))-1),1,NA)
   Phi_t<- list(formula=~time, link='logit')
   p_t<- list(formula=~time, link='logit')
-  invisible(capture.output(cjs_fit <- mark(data=dat_proc, ddl=dat_ddl,
-    model.parameters=list(Phi=Phi_t, p=p_t),
-    output=FALSE,
-    delete=TRUE)))
-  phi<- summary(cjs_fit)$reals$Phi[[1]]$pim[1, -(nocc-1)]
-  p<- summary(cjs_fit)$reals$p[[1]]$pim[1, -(nocc-1)]
+  if (logit_link=='RMark') {
+    dat_proc<- RMark::process.data(data=m_data, model='CJS')
+    dat_ddl<- RMark::make.design.data(dat_proc)
+    dat_ddl$Phi$fix=ifelse(dat_ddl$Phi$time==(unique(nchar(m_data$ch))-1),1,NA)
+    invisible(capture.output(cjs_fit <- RMark::mark(data=dat_proc, ddl=dat_ddl,
+      model.parameters=list(Phi=Phi_t, p=p_t),
+      output=FALSE,
+      delete=TRUE)))
+    phi<- summary(cjs_fit)$reals$Phi[[1]]$pim[1, -(nocc-1)]
+    p<- summary(cjs_fit)$reals$p[[1]]$pim[1, -(nocc-1)]
+  } else if (logit_link=='marked') {
+    cjs_fit<- marked::crm(m_data, model.parameters=list(Phi=Phi_t, p=p_t))
+    phi<- cjs_fit$results$reals$Phi[1:(nocc-2), 3]
+    p<- cjs_fit$results$reals$p[1:(nocc-2), 3]
+  } else {
+    stop('Please specifiy either "RMark" or "marked" for logit link.')
+  }
 
   if(phi_p_only=='y') {
     calc<- cbind(t(phi), t(p))
+    colnames(calc)<- c(paste0('Phi', 1:(nocc-2)), paste0('p', 2:(nocc-1)))
     return(calc)
     stop()
   }
@@ -483,7 +493,7 @@ mark_calc<- function(ch, i, nocc, wt, phi_p_only, ...){
 #' Make an ".inp" file for packages RMark.
 #'
 #' @param ch Input file containing capture history (from \code{format_dat()} function).
-#' @return RMark data file
+#' @return RMark/marked data file
 #' @examples
 #' m_data<- mark_dat(ch)
 #'
@@ -512,9 +522,9 @@ mark_dat<- function(ch) {
 #' @param wgt Indicates whether to weight the sampling probability.
 #' @param wgt_init Indicates whether to calculate the original estimates using weighted probability.
 #' @param phi_p_only Indicate to turn off the phi_p_only option in \code{curv_calc()}. Default is no ("n").
-#' @param fpc Indicate to turn off the fpc option in \code{curv_calc()}. Default is yes ("y").
+#' @param fpc Indicate to turn off the finite population correction option in \code{curv_calc()}. Default is yes ("y").
 #' @param match_bt4 Indicate to turn off the match_bt4 option in \code{curv_calc()}. The default here is yes ("y").
-#' @param logit_link Indicate to use Rmark and estimate using logit link. The default here is no ("n").
+#' @param logit_link Indicate to use "RMark" or "marked" and estimate using logit link. The default here is none ("n").
 #' @return Estimates in a data frame with original estimate as the first row and bootstrap results in the remaining rows.
 #' @examples
 #' out<- bootystrapper(detect_data, surv_calc, iter= 100, n_occ= 8, wgt= 'n', wgt_init= 'n')
@@ -527,7 +537,7 @@ bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', m
   if (logit_link=='n') {
     original <- fn(d, i=1, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4)
   } else {
-    original <- fn(d, i=1, n_occ, wgt, phi_p_only)
+    original <- fn(d, i=1, n_occ, wgt, phi_p_only, logit_link)
   }
   #make an output matrix with NA's
   out <- matrix(data=NA, nrow=(iter+1),ncol=length(original))
@@ -548,15 +558,15 @@ bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', m
     # build resampled data from sample.index
     sample_data <- d[sample_index,]
 
-    # run function on resampled data
+    # run function on resampled data (with quit loop)
     attempt<- 1
-    while(is.null(out[i,]) && attempt<= 10) {
+    while(is.na(out[i,]) && attempt<= 10) {
       attempt<- attempt+ 1
       try(
         if (logit_link=='n') {
           out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4)
         } else {
-          out[i,] <- fn(sample_data, i, n_occ, wgt, phi_p_only)
+          out[i,] <- fn(sample_data, i, n_occ, wgt, phi_p_only, logit_link)
         }
       )
     }
@@ -564,7 +574,7 @@ bootystrapper <- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', m
     # if (logit_link=='n') {
     #   out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4)
     # } else {
-    #   out[i,] <- fn(sample_data, i, n_occ, wgt, phi_p_only)
+    #   out[i,] <- fn(sample_data, i, n_occ, wgt, phi_p_only, logit_link)
     # }
 
     setTxtProgressBar(pb, i) # print booty progress
@@ -627,6 +637,7 @@ marray<- function(CH, n_occ){
     m_array[t, n_occ+1]<- sum(m_array[t,2:n_occ])
   } # r(i)
   out<- m_array[-n_occ,]
+  dimnames(out)<-  list(1:(n_occ-1), c('R(i)', 'j=2', 3:n_occ, 'r(i)'))
   return(out)
 }
 
@@ -667,6 +678,7 @@ marray_wtd<- function(CH, n_occ){
     m_array[t, n_occ+1]<- sum(m_array[t,2:n_occ])
   } # r(i)
   out<- m_array[-n_occ,]
+  dimnames(out)<-  list(1:(n_occ-1), c('R(i)', 'j=2', 3:n_occ, 'r(i)'))
   return(out)
 }
 

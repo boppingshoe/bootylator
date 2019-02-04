@@ -4,7 +4,7 @@
 \alias{mark_calc}
 \title{Estimate survivals/detection using likelihood method, with logit link, and tally adult returns}
 \usage{
-mark_calc(ch, i, nocc, wt, phi_p_only, ...)
+mark_calc(ch, i, nocc, wt, phi_p_only, logit_link = "RMark", ...)
 }
 \arguments{
 \item{ch}{Input file made by \code{format_dat()} function.}
@@ -16,6 +16,8 @@ mark_calc(ch, i, nocc, wt, phi_p_only, ...)
 \item{wt}{Indicates whether to weight the sampling probability (bootstrap only).}
 
 \item{phi_p_only}{Option to only calculate survivals and detection and not do the adult counts.}
+
+\item{logit_link}{Option to use package "RMark" or "marked" for estimating survival with logit link function. The default is package "RMark."}
 }
 \value{
 Survivals, detection and returing adult counts

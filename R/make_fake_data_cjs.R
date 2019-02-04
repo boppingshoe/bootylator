@@ -35,15 +35,15 @@ siml_cjs<- function(big_phi, big_p, mrkd, remv, n_occ, intgr, surv_diff, grp_t, 
   CH$capture<- as.integer(cbind(do.call(paste0,
     as.data.frame(CH[, grep('occ', names(CH))], stringsAsFactors=FALSE)
   )))
-  CH$brood<- sample(c('CW','AD'), size=mrkd, prob=c(0.5, 0.5), replace=TRUE)
+  CH$brood<- sample(c('CW', 'AD'), size=mrkd, prob=c(0.5, 0.5), replace=TRUE)
   CH$group<- NA
   CH[CH$brood=='CW',]$group<- sample(c('R','T'), size=sum(CH$brood=='CW'),
     prob=c(grp_r, grp_t), replace=TRUE)
   CH[CH$brood=='AD',]$group<- sample(c('R','T'), size=sum(CH$brood=='AD'),
     prob=c(grp_r, grp_t), replace=TRUE)
   if(n_occ<8) CH$group<- 'T'
-  CH$prob<- ifelse(CH[,n_occ+1]=='CW', intgr/sum(CH[,n_occ+1]=='CW'),
-                   segr/sum(CH[,n_occ+1]=='AD'))
+  CH$prob<- ifelse(CH$brood=='CW', intgr/sum(CH$brood=='CW'),
+                   segr/sum(CH$brood=='AD'))
   CH$age_boa<- NA
   CH$age_rtn<- NA
 
@@ -51,7 +51,7 @@ siml_cjs<- function(big_phi, big_p, mrkd, remv, n_occ, intgr, surv_diff, grp_t, 
     CH[i,1]<- 1 # first detection
     for(t in 2:n_occ){ # starting loop on the second occ
       ifelse(CH[i,n_occ+1]=='CW', sur<- rbinom(1, 1, big_phi[i,t-1]),
-             sur<- rbinom(1, 1, big_phi[i,t-1]-surv_diff)) # diff surv for int and seg
+             sur<- rbinom(1, 1, big_phi[i,t-1]- surv_diff)) # diff surv for int and seg
       if(sur==0) break
       rp<- rbinom(1, 1, big_p[i,t-1]) # detection
       if(rp==1) CH[i,t]<- 1
@@ -62,11 +62,9 @@ siml_cjs<- function(big_phi, big_p, mrkd, remv, n_occ, intgr, surv_diff, grp_t, 
     } # observed fate at t for fish i
     if(sur==0) next
     adu<- rbinom(1, 1, adu_rtn) # x% adult return (for all)
-    #ifelse(sum(CH[i,2:n_occ])==0, adu<- rbinom(1,1,0.05), adu<- rbinom(1,1,0.01))
     CH$age_boa[i]<- ifelse(adu==1, sample(c(0,1,2,3), size=1,
-      prob=c(0.26, 0.34, 0.39, 0.01)), CH$age_boa[i]) # assign age
-    CH$age_rtn[i]<- ifelse(!is.na(CH$age_boa[i]), sample(c(NA,0,1,2,3), size=1,
-      prob=c(0.49, 0.01, 0.22, 0.27, 0.01)), CH$age_rtn[i]) # assign age
+      prob=c(0.22, 0.34, 0.39, 0.05)), CH$age_boa[i]) # assign age
+    CH$age_rtn[i]<- ifelse(rbinom(1, 1, 0.95)== 1, CH$age_boa[i], NA)
   } # fish i
   # tallying using the corrected data set ----
   # adult counts using age_rtn

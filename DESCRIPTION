@@ -8,10 +8,13 @@ Description: Automates the bootstrapping process for FPC biologists.
     The package contains the following functions:
     format_dat()- upload and format input data files,
     surv_calc()- calculate parameter estimates, 
+    mark_calc()- calculate parameter estimates with logit link, 
     bootystrapper()- process bootstrap loops, 
-    doCalcs_v3()/doCalcs_uc()- convert estimates and calculate CSS parameters for output. 
+    doCalcs()/doCalcs_uc()- convert estimates and calculate CSS parameters for output. 
     siml_cjs()- simulates fake detection history based on parameters values given.
-Imports: RODBC
+Imports: marked,
+    RMark,
+    RODBC
 License: Unlimited
 Encoding: UTF-8
 LazyData: none
