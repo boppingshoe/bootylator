@@ -77,8 +77,8 @@ get.CIs <- function(data, exci='n', exfn, x, n, conflev, ...){
   result$np_95cill  <- quantile(data, 0.025, na.rm= TRUE)
   result$np_95ciul  <- quantile(data, 0.975, na.rm= TRUE)
   if (exci== 'y') {
-    result$ex_90cill<- exfn(x, n, conflev=0.9)[1]
-    result$ex_90ciul<- exfn(x, n, conflev=0.9)[2]
+    result$ex_90cill<- exfn(x, n, conflev=0.9)[1]* 100
+    result$ex_90ciul<- exfn(x, n, conflev=0.9)[2]* 100
   }
 
   return(result)
@@ -461,15 +461,15 @@ Pr_T         <- get.CIs(pr_trans_new)
 Pr_C0        <- get.CIs(pr_c0_new)
 Pr_C1        <- get.CIs(pr_c1_new)
 
-overallSAR   <- get.CIs(sar_tws_cr* 100, exci='y',
+overallSAR<- get.CIs(sar_tws_cr* 100, exci='y',
   exactci, x=totaladult.[1], n=popula_cjs.[1])
-overallSAR_gj   <- get.CIs(sar_tws_cr_gj* 100, exci='y',
+overallSAR_gj<- get.CIs(sar_tws_cr_gj* 100, exci='y',
   exactci, x=totaladult_gj.[1], n=popula_cjs.[1])
-overallSAR_b   <- get.CIs(sar_tws_cr_b* 100, exci='y',
+overallSAR_b<- get.CIs(sar_tws_cr_b* 100, exci='y',
   exactci, x=totaladult_b.[1], n=popula_cjs.[1])
-overallSAR_bj   <- get.CIs(sar_tws_cr_bj* 100, exci='y',
+overallSAR_bj<- get.CIs(sar_tws_cr_bj* 100, exci='y',
   exactci, x=totaladult_bj.[1], n=popula_cjs.[1])
-LGRpop       <- get.CIs(popula_cjs.)
+LGRpop<- get.CIs(popula_cjs.)
 
 sarLGR <- get.CIs(sarLGR.* 100, exci='y',
   exactci, x=lgradults.[1], n=x12.[1])
@@ -630,7 +630,7 @@ if (makefile == 'y' | makefile == 'Y') {
       safer=TRUE, append=TRUE)
   }
 
-  odbcCloseAll()
+  RODBC::odbcCloseAll()
 }
 
 # finally print in R

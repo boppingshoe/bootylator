@@ -1,7 +1,7 @@
 Package: bootylator
 Type: Package
 Title: Bootstrap Program for CSS Estimates
-Version: 0.4.1
+Version: 0.4.2
 Author: bobby Hsu
 Maintainer: bobby Hsu <bobbyhsu@fpc.org>
 Description: Automates the bootstrapping process for FPC biologists.

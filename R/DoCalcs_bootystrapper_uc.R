@@ -28,6 +28,31 @@ roundT <- function(x, ...){
 
 #------------------------------------------------------------------------------
 #90%,95% non parametric CI function similar to the old bootstrap program [[modified order, 7-24-2013 JET]]
+
+exactci <- function(x, n, conflev){
+  alpha <- (1- conflev)
+  if (x == 0) {
+    ll <- 0
+    ul <- 1 - (alpha/ 2)^ (1/ n) # qbeta(1- alpha/ 2, x+ 1, n- x)
+  }
+  else if (x == n) {
+    ll <- (alpha/ 2)^ (1/ n)
+    ul <- 1
+  }
+  else {
+    ll <- 1/ (1+ (n- x+ 1)/ (x* qf(alpha/ 2, 2* x, 2* (n- x+ 1))) )
+    ul <- 1/ (1+ (n- x)/
+        ((x+ 1) * qf(1- alpha/ 2, 2* (x+ 1), 2* (n- x))) )
+  }
+  c(ll, ul)
+}
+# Computes the Clopper/Pearon exact ci
+# for a binomial success probability
+# for x successes out of n trials with
+# confidence coefficient conflev
+# from http://users.stat.ufl.edu/~aa/cda/R/one-sample/R1/index.html
+# date of visit: 1/14/2019
+
 get.CIs <- function(data, exci='n', exfn, x, n, conflev, ...){
   n_dat<- length(data)- 1
   result <- data.frame(0,0,0,0,0,0,0,0,0,0, NA,NA)
@@ -45,8 +70,8 @@ get.CIs <- function(data, exci='n', exfn, x, n, conflev, ...){
   result$np_95cill  <- quantile(data, 0.025, na.rm= TRUE)
   result$np_95ciul  <- quantile(data, 0.975, na.rm= TRUE)
   if (exci== 'y') {
-    result$ex_90cill<- exfn(x, n, conflev=0.9)[1]
-    result$ex_90ciul<- exfn(x, n, conflev=0.9)[2]
+    result$ex_90cill<- exfn(x, n, conflev= 0.9)[1]* 100
+    result$ex_90ciul<- exfn(x, n, conflev= 0.9)[2]* 100
   }
 
   return(result)
@@ -86,7 +111,7 @@ totaladult_mj<- round((crt$C0adultj_t_rtn + crt$C1adultj_rtn + crt$Txadultj_rtn)
 
 #Smolt populations--------------------------------------------------------------
 #smolts
-popula_cjs  <- r1 * s1_cjs
+# popula_cjs<- r1* s1_cjs
 
 #overall SARs by location and with and without jacks
 sar_tws_cr_b <-  totaladult_b/(s1_cjs * r1)
@@ -114,26 +139,33 @@ if('p4' %in% names(crt)){p4<- get.CIs(p4)} else {p4 <- get.CIs(rep(0, 1001))}
 if('p5' %in% names(crt)){p5<- get.CIs(p5)} else {p5 <- get.CIs(rep(0, 1001))}
 if('p6' %in% names(crt)){p6<- get.CIs(p6)} else {p6 <- get.CIs(rep(0, 1001))}
 
-popula_cjs<- get.CIs(r1 * s1_cjs)
+popula_cjs<- get.CIs(r1* s1_cjs)
 adults_b<- get.CIs(totaladult_b)
 adults_bj<- get.CIs(totaladult_bj)
 adults_m<- get.CIs(totaladult_m)
 adults_mj<- get.CIs(totaladult_mj)
 
-releaseSAR_b<- get.CIs(sar_rel_b) * 100
-releaseSAR_bj<- get.CIs(sar_rel_bj) * 100
-overallSAR_b<- get.CIs(sar_tws_cr_b) * 100
-overallSAR_bj<- get.CIs(sar_tws_cr_bj) * 100
-releaseSAR_m<- get.CIs(sar_rel_m) * 100
-overallSAR_m<- get.CIs(sar_tws_cr_m) * 100
-overallSAR_mj<- get.CIs(sar_tws_cr_mj) * 100
+releaseSAR_b<- get.CIs(sar_rel_b* 100, exci='y',
+  exactci, x= totaladult_b[1], n= r1[1])
+releaseSAR_bj<- get.CIs(sar_rel_bj* 100, exci='y',
+  exactci, x= totaladult_bj[1], n= r1[1])
+overallSAR_b<- get.CIs(sar_tws_cr_b* 100, exci='y',
+  exactci, x= totaladult_b[1], n= (r1* s1_cjs)[1])
+overallSAR_bj<- get.CIs(sar_tws_cr_bj* 100, exci='y',
+  exactci, x= totaladult_bj[1], n= (r1* s1_cjs)[1])
 
-#McNpop       <- get.CIs(popula_cjs)
+releaseSAR_m<- get.CIs(sar_rel_m* 100, exci='y',
+  exactci, x= totaladult_m[1], n= r1[1])
+overallSAR_m<- get.CIs(sar_tws_cr_m* 100, exci='y',
+  exactci, x= totaladult_m[1], n= (r1* s1_cjs)[1])
+overallSAR_mj<- get.CIs(sar_tws_cr_mj* 100, exci='y',
+  exactci, x= totaladult_mj[1], n= (r1* s1_cjs)[1])
+# McNpop       <- get.CIs(r1* s1_cjs)
 
 #wrangle format and output------------------------------------------------------
 #choose parameters:
 parm <- c(
-          #general stuff for evaluation; has various reach survival versions
+          # general stuff for evaluation; has various reach survival versions
           # 'S1', 'S2', 'S3', 'S4', 'SR', 'R1'
           paste0('S', 1:nocc)
           , 'SR', 'R1'
@@ -158,7 +190,7 @@ ans <- cbind(parm, ansDF)
 if (makefile == 'y' | makefile == 'Y') {
   # save bootystrap output to sql server
   rand_str <- function(n) {
-    do.call(paste0, replicate(7, sample(c(letters,letters,0:9), n, TRUE), FALSE))
+    do.call(paste0, replicate(7, sample(c(letters, letters, 0:9), n, TRUE), FALSE))
   }
   channel <- RODBC::odbcDriverConnect("case=nochange;
     Description=CSSOUTPUT;
