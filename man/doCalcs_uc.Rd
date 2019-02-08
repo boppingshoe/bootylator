@@ -22,6 +22,6 @@ Survivals,detection, adult counts, and SARs...
 Take bootstrap output and return summary data for all annual report/web table for Upper and Mid Columbia River fish
 }
 \examples{
-ans<- doCalcs_uc(crt, target= 'CR_USK_2015_OKAN_MCJ', css_group=' OKSR', makefile= 'y')
+ans<- doCalcs_uc(crt, target= 'CR_USK_2015_OKAN_MCJ', css_group= 'OKSR', makefile= 'y')
 format(ans, scientific= FALSE)
 }

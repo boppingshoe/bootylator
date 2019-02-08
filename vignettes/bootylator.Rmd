@@ -46,7 +46,7 @@ dat_in<- format_dat(file_name='SR HCH 2016 CLWH_SU_new_format.csv', mig_yr=2016,
 
 ## Run the Bootstrap
 
-`bootystrapper()` is the function that automates the bootstrap simulation. It takes the estimation function, `surv_cal()` or `mark_calc()`, and run it throung the iteration process.  User specifies number of iterations, options for incorporating weighted bootstrap, finite population correction, and matching outputs from BT4 program. Users can also specify to only get estimates for reach survival and detection (and omit other metrics). `surv_cal()` estimates using closed-formed CJS, and `mark_calc()` calls package *RMARK* or *marked* to estimate survivals using logit link.
+`bootystrapper()` is the function that automates the bootstrap simulation. It takes the estimation function, `surv_cal()` or `mark_calc()`, and run it throung the iteration process.  User specifies number of iterations, options for incorporating weighted bootstrap, finite population correction, and matching outputs from BT4 program. Users can also specify to only get estimates for reach survival and detection (and omit other metrics). `surv_cal()` estimates using closed-form CJS, and `mark_calc()` calls package *RMARK* or *marked* to estimate survivals using logit link.
 
 ```{r}
 booty<- bootystrapper(dat_in, surv_calc, iter=10, wgt='n', wgt_init='n', fpc='y', match_bt4='y', phi_p_only='n')
@@ -57,7 +57,7 @@ booty<- bootystrapper(dat_in, surv_calc, iter=10, wgt='n', wgt_init='n', fpc='y'
 
 ## Output
 
-To summarize and export the results, use `doCalcs()` for Snake River or `doCalcs_uc()` for upper Columbia. Bootstrap results are saved in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and parameter output in csv file in current working directory. Exporting results is suppressed for the example below.
+To summarize and export the results, use `doCalcs()` for Snake River or `doCalcs_uc()` for upper Columbia. Bootstrap results are saved in CSSOUTPUT in SQL server (PITTAG_2016), append parameter output in CSSREPORT in the same SQL server, and parameter output in csv file in current working directory. Exporting results is suppressed for the example below.
 
 ```{r}
 ans<- doCalcs(booty, species='CH', reaches=6, makefile='n')

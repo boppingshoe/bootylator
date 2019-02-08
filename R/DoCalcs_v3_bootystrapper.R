@@ -145,7 +145,7 @@ m14       <- crt$m14
 # m14.      <- crt$m14t #
 
 # 1/15/2019 added ifelse statements for chinooka and "others" counting methods
-if (species== 'CH') { # chinooka don't count jack
+if (species== 'CH' | species== 'ch') { # chinooka don't count jack
   c0adults  <- round(crt$C0adult_rtn, 0)
   c0adults. <- round(crt$C0adult_t_rtn, 0)
   c1adults. <- round(crt$C1adult_rtn, 0)
@@ -165,7 +165,7 @@ c1adults_gj. <- round(crt$C1adultj_rtn, 0)
 t0adults_gj. <- round(crt$T0adultj_rtn, 0)
 t1adults_gj. <- round(crt$Txadultj_rtn, 0)
 
-if (species == 'CH') { # chinooka don't count jack
+if (species == 'CH' | species== 'ch') { # chinooka don't count jack
   c0adults_b. <- round(crt$C0adult_t_boa, 0)
   c1adults_b. <- round(crt$C1adult_boa, 0)
   t0adults_b. <- round(crt$T0adult_boa, 0)
@@ -183,7 +183,7 @@ t0adults_bj. <- round(crt$T0adultj_boa, 0)
 t1adults_bj. <- round(crt$Txadult_boa, 0)
 
 # deal with steelhead and sockeye not having 'jacks'
-if (species== 'CH') {
+if (species== 'CH' | species== 'ch') {
   totaladult.<- round(crt$C0adult_t_rtn+ crt$C1adult_rtn+ crt$Txadult_rtn)
   totaladult_gj.<- round(crt$C0adultj_t_rtn+ crt$C1adultj_rtn+ crt$Txadultj_rtn)
   totaladult_b.<- round(crt$C0adult_t_boa+ crt$C1adult_boa+ crt$Txadult_boa)
@@ -198,7 +198,7 @@ if (species== 'CH') {
 }
 
 # make sure for Tx SARs to LGS and LMM use the lgsadults2_gra and lmnadults2_gra for the Xa2 and xaa2 seen or unseen above post-2005.
-if (species== 'CH') {
+if (species== 'CH' | species== 'ch') {
   lgradults. <- round(crt$lgradult_rtn, 0)
   lgsadults. <- round(crt$lgsadult_rtn, 0)
   lmnadults. <- round(crt$lmnadult_rtn, 0)
@@ -551,6 +551,7 @@ parm <- c(
 ansDF <- get(parm[1])
 for(i in parm[-1]) {ansDF <- rbind(ansDF, get(i))}
 ans <- cbind(parm, ansDF)
+# ans[, c('ex_90cill', 'ex_90ciul')]<- NULL
 
 
 # option to save output to working directory and sql server
@@ -559,21 +560,22 @@ if (makefile == 'y' | makefile == 'Y') {
   rand_str <- function(n) {
     do.call(paste0, replicate(7, sample(c(letters,letters,0:9), n, TRUE), FALSE))
   }
-  channel <- odbcDriverConnect("case=nochange;
+  channel <- RODBC::odbcDriverConnect("case=nochange;
                                 Description=CSSOUTPUT;
                                 DRIVER=SQL Server;
-                                SERVER=PITTAG_2016SQL;
+                                SERVER=PITTAG_2016;
                                 UID=sa;
                                 PWD=frznool;
                                 WSID=CUTTHROAT;
                                 DATABASE=CSSOUTPUT;
                                 Network=DBMSSOCN")
-  sqlSave(channel, data.frame(crt), tablename=paste0('CRT_', target, '_bootylator_', rand_str(1), format(Sys.time(), '%m%d%Y')) )
-  odbcCloseAll()
+  RODBC::sqlSave(channel, data.frame(crt), tablename=
+      paste0('C_T_', target, '_bootylator_', rand_str(1), format(Sys.time(), '%m%d%Y')))
+  RODBC::odbcCloseAll()
 
   # write doCalcs output in csv file to working directory
-  nm <- paste("doCalcs_v3 ", target, format(Sys.time(), '%Y-%m-%d %H%M%S'),
-    " ",reaches," reaches",".csv", sep = "")
+  nm <- paste("doCalcs ", target, format(Sys.time(), '%Y-%m-%d %H%M%S'),
+    " ", reaches, " reaches", ".csv", sep = "")
   # ans$css_group<-css_group
   write.table(ans, paste(nm, sep = "\\"),
     col.names = T, row.names = F, sep = ',', quote = F)
@@ -585,10 +587,10 @@ if (makefile == 'y' | makefile == 'Y') {
   #             quote = F)
 
   # save to sql server CSS report
-  channel2 <- odbcDriverConnect("case=nochange;
+  channel2 <- RODBC::odbcDriverConnect("case=nochange;
                                 Description=CSSREPORT;
                                 DRIVER=SQL Server;
-                                SERVER=PITTAG_2016SQL;
+                                SERVER=PITTAG_2016;
                                 UID=sa;
                                 PWD=frznool;
                                 WSID=CUTTHROAT;
@@ -608,13 +610,24 @@ if (makefile == 'y' | makefile == 'Y') {
   ans$coord_id<- crt$coord_id[1]
   ans$flag<- as.character('')
   # IS THIS DATA ALREADY IN THE TABLE?
-  inthesqltable<- sqlQuery(channel2, paste("select css_group, migr_year, parm, thecount = count(initial) from BOOTSTRAP_RESULTS where css_group = ", "'", css_group, "'", " and migr_year = ", "'", migr_yr, "'", " and parm = 'overallSAR' group by css_group, migr_year, parm", sep=""))
+  inthesqltable<- RODBC::sqlQuery(channel2,
+    paste("select css_group, migr_year, parm, thecount = count(initial)
+      from BOOTSTRAP_RESULTS
+      where css_group = ", "'", css_group, "'",
+      " and migr_year = ", "'", migr_yr, "'",
+      " and parm = 'overallSAR'
+      group by css_group, migr_year, parm", sep="")
+    )
 
   # EITHER UPDATE OR SAVE DEPENDING ON ANSWER
-  if(length(inthesqltable$thecount) != '0') {
-    sqlUpdate(channel2, data.frame(ans),tablename="BOOTSTRAP_RESULTS", index = c('css_group', 'migr_year', 'parm'), verbose = FALSE, test = FALSE, nastring = NULL,fast = TRUE)
+  # columns have to match or R would crash
+  if (length(inthesqltable$thecount)!= '0') {
+    RODBC::sqlUpdate(channel2, data.frame(ans), tablename="BOOTSTRAP_RESULTS",
+      index = c('css_group', 'migr_year', 'parm'),
+      verbose = FALSE, test = FALSE, nastring = NULL, fast = TRUE)
   } else {
-      sqlSave(channel2,data.frame(ans),tablename="BOOTSTRAP_RESULTS",safer=TRUE,append=TRUE)
+    RODBC::sqlSave(channel2, data.frame(ans), tablename="BOOTSTRAP_RESULTS",
+      safer=TRUE, append=TRUE)
   }
 
   odbcCloseAll()

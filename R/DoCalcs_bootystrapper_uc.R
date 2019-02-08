@@ -8,7 +8,7 @@
 #' @param makefile Save bootstrap output in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.
 #' @return Survivals,detection, adult counts, and SARs...
 #' @examples
-#' ans<- doCalcs_uc(crt, target= 'CR_USK_2015_OKAN_MCJ', css_group=' OKSR', makefile= 'y')
+#' ans<- doCalcs_uc(crt, target= 'CR_USK_2015_OKAN_MCJ', css_group= 'OKSR', makefile= 'y')
 #' format(ans, scientific= FALSE)
 
 
@@ -28,32 +28,35 @@ roundT <- function(x, ...){
 
 #------------------------------------------------------------------------------
 #90%,95% non parametric CI function similar to the old bootstrap program [[modified order, 7-24-2013 JET]]
-get.CIs <- function(data){
-  n<- length(data)- 1
-  result <- data.frame(0,0,0,0,0,0,0,0,0,0)
+get.CIs <- function(data, exci='n', exfn, x, n, conflev, ...){
+  n_dat<- length(data)- 1
+  result <- data.frame(0,0,0,0,0,0,0,0,0,0, NA,NA)
   names(result) <- c("initial", "np_90cill", "np_90ciul", "boots_avg",
-    "boots_std", "cv", "p_90cill", "p_90ciul",
-    "np_95cill", "np_95ciul")
+    "boots_std", "cv", "p_90cill", "p_90ciul", "np_95cill", "np_95ciul",
+    "ex_90cill", "ex_90ciul")
   result$initial    <- data[1]
   result$np_90cill  <- quantile(data, 0.05, na.rm= TRUE)
   result$np_90ciul  <- quantile(data, 0.95, na.rm= TRUE)
   result$boots_avg  <- mean(data[-1], na.rm= TRUE)
-  result$boots_std  <- sqrt(var(data[-1], na.rm= TRUE)*(n-1)/n) # pop'n sd
+  result$boots_std  <- sqrt(var(data[-1], na.rm= TRUE)*(n_dat-1)/n_dat) # pop'n sd
   result$cv         <- result$boots_std/result$boots_avg
   result$p_90cill   <- result$boots_avg - 1.645*result$boots_std
   result$p_90ciul   <- result$boots_avg + 1.645*result$boots_std
   result$np_95cill  <- quantile(data, 0.025, na.rm= TRUE)
   result$np_95ciul  <- quantile(data, 0.975, na.rm= TRUE)
+  if (exci== 'y') {
+    result$ex_90cill<- exfn(x, n, conflev=0.9)[1]
+    result$ex_90ciul<- exfn(x, n, conflev=0.9)[2]
+  }
 
   return(result)
 }
 fill.CIs <- function(data){
+  result <- data.frame(data[1],data[1],data[1],data[1],data[1],data[1],data[1],data[1],data[1],data[1], NA,NA)
+  names(result) <- c("initial", "np_90cill", "np_90ciul", "boots_avg", "boots_std", "cv", "p_90cill", "p_90ciul", "np_95cill", "np_95ciul", "ex_90cill", "ex_90ciul")
+  return(result)
+}
 
-            result <- data.frame(data[1],data[1],data[1],data[1],data[1],data[1],data[1],data[1],data[1],data[1])
-            names(result) <- c("initial", "np_90cill", "np_90ciul", "boots_avg", "boots_std",
-                                "cv", "p_90cill", "p_90ciul", "np_95cill", "np_95ciul")
-            return(result)
-            }
 
 #load up the needed pieces------------------------------------------------------
 nocc<- sum(grepl('phi', names(crt)))
@@ -103,7 +106,7 @@ if('phi3' %in% names(crt)) {S3<- get.CIs(crt$phi3)} else {S3 <- get.CIs(rep(0, 1
 if('phi4' %in% names(crt)) {S4<- get.CIs(crt$phi4)} else {S4 <- get.CIs(rep(0, 1001))}
 if('phi5' %in% names(crt)) {S5<- get.CIs(crt$phi5)} else {S5 <- get.CIs(rep(0, 1001))}
 
-SR<- apply(crt[grep('phi', names(crt))][-1], 1, prod)
+SR<- get.CIs(apply(crt[grep('phi', names(crt))][-1], 1, prod))
 R1<- get.CIs(r1)
 p2<- get.CIs(p2)
 if('p3' %in% names(crt)){p3<- get.CIs(p3)} else {p3 <- get.CIs(rep(0, 1001))}
@@ -157,21 +160,22 @@ if (makefile == 'y' | makefile == 'Y') {
   rand_str <- function(n) {
     do.call(paste0, replicate(7, sample(c(letters,letters,0:9), n, TRUE), FALSE))
   }
-  channel <- odbcDriverConnect("case=nochange;
+  channel <- RODBC::odbcDriverConnect("case=nochange;
     Description=CSSOUTPUT;
     DRIVER=SQL Server;
-    SERVER=PITTAG_2016SQL;
+    SERVER=PITTAG_2016;
     UID=sa;
     PWD=frznool;
     WSID=CUTTHROAT;
     DATABASE=CSSOUTPUT;
     Network=DBMSSOCN")
-  sqlSave(channel, data.frame(crt), tablename=paste0('CRT_', target, '_bootylator_', rand_str(1), format(Sys.time(), '%m%d%Y')) )
-  odbcCloseAll()
+  RODBC::sqlSave(channel, data.frame(crt), tablename=
+      paste0('C_T_', target, '_bootylator_', rand_str(1), format(Sys.time(), '%m%d%Y')))
+  RODBC::odbcCloseAll()
 
   # write doCalcs output in csv file to working directory
-  nm <- paste("doCalcs_v3 ", target, format(Sys.time(), '%Y-%m-%d %H%M%S'),
-    " ",reaches," reaches",".csv", sep = "")
+  nm <- paste("doCalcs_uc ", target, format(Sys.time(), '%Y-%m-%d %H%M%S'),
+    " ", ".csv", sep = "")
   # ans$css_group<-css_group
   write.table(ans, paste(nm, sep = "\\"),
     col.names = T, row.names = F, sep = ',', quote = F)
@@ -183,10 +187,10 @@ if (makefile == 'y' | makefile == 'Y') {
   #             quote = F)
 
   # save to sql server CSS report
-  channel2 <- odbcDriverConnect("case=nochange;
+  channel2 <- RODBC::odbcDriverConnect("case=nochange;
                                 Description=CSSREPORT;
                                 DRIVER=SQL Server;
-                                SERVER=PITTAG_2016SQL;
+                                SERVER=PITTAG_2016;
                                 UID=sa;
                                 PWD=frznool;
                                 WSID=CUTTHROAT;
@@ -206,16 +210,26 @@ if (makefile == 'y' | makefile == 'Y') {
   ans$coord_id<- crt$coord_id[1]
   ans$flag<- as.character('')
   # IS THIS DATA ALREADY IN THE TABLE?
-  inthesqltable<- sqlQuery(channel2, paste("select css_group, migr_year, parm, thecount = count(initial) from BOOTSTRAP_RESULTS where css_group = ", "'", css_group, "'", " and migr_year = ", "'", migr_yr, "'", " and parm = 'overallSAR' group by css_group, migr_year, parm", sep=""))
+  inthesqltable<- RODBC::sqlQuery(channel2,
+    paste("select css_group, migr_year, parm, thecount = count(initial)
+      from BOOTSTRAP_RESULTS
+      where css_group = ", "'", css_group, "'",
+      " and migr_year = ", "'", migr_yr, "'",
+      " and parm = 'overallSAR'
+      group by css_group, migr_year, parm", sep="")
+    )
 
   # EITHER UPDATE OR SAVE DEPENDING ON ANSWER
   if(length(inthesqltable$thecount) != '0') {
-    sqlUpdate(channel2, data.frame(ans),tablename="BOOTSTRAP_RESULTS", index = c('css_group', 'migr_year', 'parm'), verbose = FALSE, test = FALSE, nastring = NULL,fast = TRUE)
+    RODBC::sqlUpdate(channel2, data.frame(ans), tablename="BOOTSTRAP_RESULTS",
+      index = c('css_group', 'migr_year', 'parm'),
+      verbose = FALSE, test = FALSE, nastring = NULL, fast = TRUE)
   } else {
-    sqlSave(channel2,data.frame(ans),tablename="BOOTSTRAP_RESULTS",safer=TRUE,append=TRUE)
+    RODBC::sqlSave(channel2, data.frame(ans), tablename="BOOTSTRAP_RESULTS",
+      safer=TRUE, append=TRUE)
   }
 
-  odbcCloseAll()
+  RODBC::odbcCloseAll()
 }
 
 # finally print in R
