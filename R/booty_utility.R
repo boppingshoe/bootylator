@@ -1,4 +1,8 @@
 
+.onAttach <- function(libname, pkgname) {
+  packageStartupMessage("Welcome to bootylator 0.4.1")
+}
+
 #' Import and format data for ready to use by \code{surv_calc()}
 #'
 #' @param file_name File path where the input csv file is stored.
