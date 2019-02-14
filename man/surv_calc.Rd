@@ -4,7 +4,7 @@
 \alias{surv_calc}
 \title{Estimate survivals, detections, and tally adult returns}
 \usage{
-surv_calc(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...)
+surv_calc(ch, i, nocc, wt, wt_i, phi_p_only, fpc, ...)
 }
 \arguments{
 \item{ch}{Input file made by \code{format_dat()} function.}
@@ -20,8 +20,6 @@ surv_calc(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...)
 \item{phi_p_only}{Option to only calculate survivals and detection and not do the adult counts.}
 
 \item{fpc}{Option to adapt finite population correction for survival and detection calculations.}
-
-\item{match_bt4}{Option to follow the procedures used by BT4 program. BT4 excludes mini-jacks for both adult and juvenile removal counts. If one choosed no ("n"), mini-jacks would be included in the juvenile removal counts.}
 }
 \value{
 Survivals, detection and returing adult counts
@@ -30,6 +28,6 @@ Survivals, detection and returing adult counts
 Estimate survivals, detections, and tally adult returns
 }
 \examples{
-surv_calc(detect_data, i= 1, nocc= 8, wt= 'n', wt_i= 'n', phi_p_only= 'y', fpc= 'y') # no need to specify match_bt4 if phi_p_only= 'y'
+surv_calc(detect_data, i= 1, nocc= 8, wt= 'n', wt_i= 'n', phi_p_only= 'y', fpc= 'y')
 
 }

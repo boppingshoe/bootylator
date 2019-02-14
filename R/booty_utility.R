@@ -1,6 +1,6 @@
 
 .onAttach <- function(libname, pkgname) {
-  packageStartupMessage("Welcome to bootylator 0.4.2")
+  packageStartupMessage("Welcome to bootylator 0.4.3")
 }
 
 #' Import and format data for ready to use by \code{surv_calc()}
@@ -223,12 +223,11 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
 #' @param wt_i Indicates whether to calculate the original estimates using weighted probability.
 #' @param phi_p_only Option to only calculate survivals and detection and not do the adult counts.
 #' @param fpc Option to adapt finite population correction for survival and detection calculations.
-#' @param match_bt4 Option to follow the procedures used by BT4 program. BT4 excludes mini-jacks for both adult and juvenile removal counts. If one choosed no ("n"), mini-jacks would be included in the juvenile removal counts.
 #' @return Survivals, detection and returing adult counts
 #' @examples
-#' surv_calc(detect_data, i= 1, nocc= 8, wt= 'n', wt_i= 'n', phi_p_only= 'y', fpc= 'y') # no need to specify match_bt4 if phi_p_only= 'y'
+#' surv_calc(detect_data, i= 1, nocc= 8, wt= 'n', wt_i= 'n', phi_p_only= 'y', fpc= 'y')
 #'
-surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
+surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, ...){
   # breakdown of int_t, int_r, seg_t, and seg_r ----
   # if comment out, make sure change the output in 'bootystrapper()'
   if (wt== 'y') tnr<- unlist(tapply(ch$group, ch$brood, table))
@@ -280,29 +279,26 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, match_bt4, ...){
   # m14t<- nrow(subset(ch, group== 'T'& ch[, 2]== 0& goj== 0& lmj!= 0))
 
   cht<- subset(ch, group== 'T')
-  if(match_bt4== 'n'){
-    x_t<- cbind(nrow(subset(cht, occ2== 2 &
-        as.numeric(substr(capture, 3,nocc- 1))== 0)),
-      nrow(subset(cht, occ3== 2 & as.numeric(substr(capture, 4,nocc- 1))== 0)),
-      nrow(subset(cht, occ4== 2 & as.numeric(substr(capture, 5,nocc- 1))== 0)),
-      ifelse(nocc> 4, nrow(subset(cht, occ5== 2 &
-          as.numeric(substr(capture, 6,nocc- 1))== 0)), NA)) # t group
-  } else {
-    # BT4 doesn't count smolts that return as mini-jacks
-    # do this to match BT4 counts
-    x_t<- cbind(nrow(subset(cht, occ2== 2 &
-        as.numeric(substr(capture, 3, nocc- 1))== 0 &
+  x_t<- cbind(nrow(subset(cht, occ2== 2 &
+      as.numeric(substr(capture, 3, nocc- 1))== 0 &
+      (age_rtn!= 0| is.na(age_rtn)))),
+    nrow(subset(cht, occ3== 2 &
+        as.numeric(substr(capture, 4 ,nocc- 1))== 0 &
         (age_rtn!= 0| is.na(age_rtn)))),
-      nrow(subset(cht, occ3== 2 &
-          as.numeric(substr(capture, 4 ,nocc- 1))== 0 &
-          (age_rtn!= 0| is.na(age_rtn)))),
-      nrow(subset(cht, occ4== 2 &
-          as.numeric(substr(capture, 5, nocc- 1))== 0 &
-          (age_rtn!= 0| is.na(age_rtn)))),
-      ifelse(nocc> 4, nrow(subset(cht, occ5== 2 &
-          as.numeric(substr(capture, 6, nocc- 1))== 0 &
-          (age_rtn!= 0| is.na(age_rtn)))), NA)) # t group
-  }
+    nrow(subset(cht, occ4== 2 &
+        as.numeric(substr(capture, 5, nocc- 1))== 0 &
+        (age_rtn!= 0| is.na(age_rtn)))),
+    ifelse(nocc> 4, nrow(subset(cht, occ5== 2 &
+        as.numeric(substr(capture, 6, nocc- 1))== 0 &
+        (age_rtn!= 0| is.na(age_rtn)))), NA)) # t group
+  # BT4 doesn't count smolts that return as mini-jacks
+  # do this to count mini-jacks
+  # x_t<- cbind(nrow(subset(cht, occ2== 2 &
+  #     as.numeric(substr(capture, 3,nocc- 1))== 0)),
+  #   nrow(subset(cht, occ3== 2 & as.numeric(substr(capture, 4,nocc- 1))== 0)),
+  #   nrow(subset(cht, occ4== 2 & as.numeric(substr(capture, 5,nocc- 1))== 0)),
+  #   ifelse(nocc> 4, nrow(subset(cht, occ5== 2 &
+  #       as.numeric(substr(capture, 6,nocc- 1))== 0)), NA)) # t group
 
   x_0<- cbind(nrow(cht[cht[, 2]== 0 & cht[, 3]== 2,]),
     nrow(cht[as.numeric(substr(cht$capture, 2, 3))== 0 & cht[, 4]== 2,]),
@@ -527,23 +523,26 @@ mark_dat<- function(ch) {
 #' @param d Input file made by \code{format_dat()}.
 #' @param fn Function to run the bootstrap on.
 #' @param iter Amount of bootstrap iterations.
-#' @param wgt Indicates whether to weight the sampling probability.
-#' @param wgt_init Indicates whether to calculate the original estimates using weighted probability.
+#' @param wgt Indicates whether to weight the sampling probability. Default is no ("n").
+#' @param wgt_init Indicates whether to calculate the original estimates using weighted probability. Default is no ("n").
 #' @param phi_p_only Indicate to turn off the phi_p_only option in \code{curv_calc()}. Default is no ("n").
 #' @param fpc Indicate to turn off the finite population correction option in \code{curv_calc()}. Default is yes ("y").
-#' @param match_bt4 Indicate to turn off the match_bt4 option in \code{curv_calc()}. The default here is yes ("y").
 #' @param logit_link Indicate to use "RMark" or "marked" and estimate using logit link. The default here is none ("n").
+#' @param save_name Name to save bootstrap output in CSSOUTPUT in SQL server. No results will be saved if nothing is specified.
 #' @return Estimates in a data frame with original estimate as the first row and bootstrap results in the remaining rows.
 #' @examples
-#' out<- bootystrapper(detect_data, surv_calc, iter= 100, n_occ= 8, wgt= 'n', wgt_init= 'n')
-#' head(out)
+#' # To conduct standard CSS bootstrap procedures
+#' out1<- bootystrapper(detect_data, surv_calc, iter= 1000, fpc= 'n', save_name='SR HCH 2008 CATH')
+#' # To conduct weighted bootstrap and produce only survival and detection estimates
+#' out2<- bootystrapper(detect_data, surv_calc, iter= 100, wgt= 'y', wgt_init= 'y', phi_p_only= 'y')
+#' head(out2)
 #'
-bootystrapper<- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', match_bt4='y', logit_link='n', ...){
+bootystrapper<- function(d, fn, iter, wgt='n', wgt_init='n', phi_p_only='n', fpc='y', logit_link='n', save_name='none', ...){
   start_time<- Sys.time()
   n_occ<- sum(grepl('occ', names(d)))
   # run function on original data
   if (logit_link=='n') {
-    original<- fn(d, i=1, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4)
+    original<- fn(d, i=1, n_occ, wgt, wgt_init, phi_p_only, fpc)
   } else {
     original<- fn(d, i=1, n_occ, wgt, phi_p_only, logit_link)
   }
@@ -572,7 +571,7 @@ bootystrapper<- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', ma
       attempt<- attempt+ 1
       try(
         if (logit_link== 'n') {
-          out[i,]<- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4)
+          out[i,]<- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only, fpc)
         } else {
           out[i,]<- fn(sample_data, i, n_occ, wgt, phi_p_only, logit_link)
         }
@@ -580,7 +579,7 @@ bootystrapper<- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', ma
     }
     # # run function on resampled data
     # if (logit_link=='n') {
-    #   out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only, fpc, match_bt4)
+    #   out[i,] <- fn(sample_data, i, n_occ, wgt, wgt_init, phi_p_only, fpc)
     # } else {
     #   out[i,] <- fn(sample_data, i, n_occ, wgt, phi_p_only, logit_link)
     # }
@@ -612,6 +611,27 @@ bootystrapper<- function(d, fn, iter, wgt, wgt_init, phi_p_only='n', fpc='y', ma
 
   cat('\n')
   print(Sys.time()- start_time)
+
+  if (save_name!= 'none') {
+    # save bootystrap output to sql server CSSOUTPUT
+    rand_str <- function(n) {
+      do.call(paste0, replicate(7, sample(c(letters,letters,0:9), n, TRUE), FALSE))
+    }
+    channel <- RODBC::odbcDriverConnect("case=nochange;
+      Description=CSSOUTPUT;
+      DRIVER=SQL Server;
+      SERVER=PITTAG_2016;
+      UID=sa;
+      PWD=frznool;
+      WSID=CUTTHROAT;
+      DATABASE=CSSOUTPUT;
+      Network=DBMSSOCN")
+    RODBC::sqlSave(channel, data.frame(out), tablename=
+        paste0('C_T_', save_name, '_bootylator_', rand_str(1),
+          format(Sys.time(), '%m%d%Y')))
+    RODBC::odbcCloseAll()
+  }
+
   return(out)
 }
 

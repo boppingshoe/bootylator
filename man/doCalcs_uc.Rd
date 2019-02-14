@@ -13,7 +13,7 @@ doCalcs_uc(crt, target, css_group, makefile = "y", ...)
 
 \item{css_group}{CSS group from the CSSGroups_LookupTable.}
 
-\item{makefile}{Save bootstrap output in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.}
+\item{makefile}{Append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.}
 }
 \value{
 Survivals,detection, adult counts, and SARs...

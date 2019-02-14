@@ -2,18 +2,17 @@
 #' Take bootstrap output and return summary data for all annual report/web table for Snake River fish
 #'
 #' @param crt Bootstrap output as input file here.
-#' @param reaches Number of reach expansion. Default is 6.
 #' @param species "CH" if the species was Chinook. "ELSE" for all others.
 #' @param target The name of the original input file (eg. SR HCH 2015 MCCA).
-#' @param css_group CSS group from the CSSGroups_LookupTable.
-#' @param makefile Save bootstrap output in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.
+#' @param css_group CSS group from the CSSGroups_LookupTable. This identification is needed so the bootstrap report can be amended correctly to the SQL server CSSREPORT.
+#' @param makefile Append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.
 #' @return Survivals,detection, adult counts, and SARs...
 #' @examples
-#' ans<- doCalcs(crt, reaches= 6, species= 'CH', target= 'SR HCH 2015 MCCA', css_group= 'MCCA', makefile= 'y')
+#' ans<- doCalcs(crt, species= 'CH', target= 'SR HCH 2015 MCCA', css_group= 'MCCA', makefile= 'y')
 #' format(ans, scientific= FALSE)
 
 
-doCalcs <- function(crt, reaches=6, species, target, css_group, makefile='y', ...) {
+doCalcs <- function(crt, species, target, css_group, makefile='y', ...) {
 
 #------------------------------------------------------------------------------
 # Modified from doCalcs_v3 (by Jack Tuomikoski)
@@ -159,7 +158,7 @@ if (species== 'CH' | species== 'ch') { # chinooka don't count jack
   t1adults. <- round(crt$Txadultj_rtn, 0)
 }
 
-### May not need to explicitly label these since the output would be the overall SAR by location and with and without jacks assigned in next section
+# May not need to explicitly label these since the output would be the overall SAR by location and with and without jacks assigned in next section
 c0adults_gj.  <- round(crt$C0adultj_t_rtn, 0)
 c1adults_gj. <- round(crt$C1adultj_rtn, 0)
 t0adults_gj. <- round(crt$T0adultj_rtn, 0)
@@ -209,25 +208,31 @@ if (species== 'CH' | species== 'ch') {
 }
 
 
-#reaches <- 6 for an example plug in
 #juvenile survival--------------------------------------------------------------
-if(reaches == 6){
-  vc_mcn  <- s2_cjs * s3_cjs * s4_cjs
-  vc_jda  <- s2_cjs * s3_cjs * s4_cjs * s5_cjs
-  vc_cjs  <- s2_cjs * s3_cjs * s4_cjs * s5_cjs * s6_cjs
-}else if(reaches == 5){
-  vc_mcn  <-  s2_cjs * s3_cjs * s4_cjs
-  vc_jda  <-  s2_cjs * s3_cjs * s4_cjs
-  vc_cjs  <- (s2_cjs * s3_cjs * s4_cjs * s5_cjs)^(285.9 / 216.4)
-}else if(reaches == 4){
-  vc_mcn  <-  s2_cjs * s3_cjs * s4_cjs
-  vc_jda  <- (s2_cjs * s3_cjs * s4_cjs)^(216.4 / 139.8)
-  vc_cjs  <- (s2_cjs * s3_cjs * s4_cjs)^(285.9 / 139.8)
-}else if(reaches == 3){
-  vc_mcn  <- (s2_cjs * s3_cjs)^(139.8 / 65.86)
-  vc_jda  <- (s2_cjs * s3_cjs)^(216.4 / 65.86)
-  vc_cjs  <- (s2_cjs * s3_cjs)^(285.9 / 65.86)
-}
+
+vc_mcn  <- s2_cjs * s3_cjs * s4_cjs
+vc_jda  <- s2_cjs * s3_cjs * s4_cjs * s5_cjs
+vc_cjs  <- s2_cjs * s3_cjs * s4_cjs * s5_cjs * s6_cjs
+
+# old doCalcs had option for reach expansion
+# (decommissioned in 2019)
+# if(reaches == 6){
+#   vc_mcn  <- s2_cjs * s3_cjs * s4_cjs
+#   vc_jda  <- s2_cjs * s3_cjs * s4_cjs * s5_cjs
+#   vc_cjs  <- s2_cjs * s3_cjs * s4_cjs * s5_cjs * s6_cjs
+# }else if(reaches == 5){
+#   vc_mcn  <-  s2_cjs * s3_cjs * s4_cjs
+#   vc_jda  <-  s2_cjs * s3_cjs * s4_cjs
+#   vc_cjs  <- (s2_cjs * s3_cjs * s4_cjs * s5_cjs)^(285.9 / 216.4)
+# }else if(reaches == 4){
+#   vc_mcn  <-  s2_cjs * s3_cjs * s4_cjs
+#   vc_jda  <- (s2_cjs * s3_cjs * s4_cjs)^(216.4 / 139.8)
+#   vc_cjs  <- (s2_cjs * s3_cjs * s4_cjs)^(285.9 / 139.8)
+# }else if(reaches == 3){
+#   vc_mcn  <- (s2_cjs * s3_cjs)^(139.8 / 65.86)
+#   vc_jda  <- (s2_cjs * s3_cjs)^(216.4 / 65.86)
+#   vc_cjs  <- (s2_cjs * s3_cjs)^(285.9 / 65.86)
+# }
 
 #do several types at once
 vc_cjs_0expan   <- (s2_cjs * s3_cjs * s4_cjs * s5_cjs * s6_cjs)
@@ -400,7 +405,7 @@ releaseCRT <- fill.CIs(R1)
 # releaseT   <- fill.CIs(t$r1)
 # releaseR   <- fill.CIs(r$r1)
 # BSreaches  <- fill.CIs(crt$numreaches)
-doCalcsreaches <- fill.CIs(reaches)
+# doCalcsreaches <- fill.CIs(reaches)
 
 #
 releaseT   <- get.CIs(R1.)
@@ -508,7 +513,7 @@ C1popModified <- get.CIs(c1_cjsNEWMod)
 #choose parameters:
 parm <- c(
   # general stuff for evaluation; has various reach survival versions
-  'doCalcsreaches', #'BSreaches',
+  # 'doCalcsreaches', 'BSreaches',
   'releaseCRT', 'releaseT', #'releaseR',
   'SR_0expan', 'SR_1expan', 'SR_2expan', 'SR_3expan',
   'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'SR', 'S2.3',
@@ -556,37 +561,35 @@ ans <- cbind(parm, ansDF)
 
 # option to save output to working directory and sql server
 if (makefile == 'y' | makefile == 'Y') {
-  # save bootystrap output to sql server
-  rand_str <- function(n) {
-    do.call(paste0, replicate(7, sample(c(letters,letters,0:9), n, TRUE), FALSE))
-  }
-  channel <- RODBC::odbcDriverConnect("case=nochange;
-                                Description=CSSOUTPUT;
-                                DRIVER=SQL Server;
-                                SERVER=PITTAG_2016;
-                                UID=sa;
-                                PWD=frznool;
-                                WSID=CUTTHROAT;
-                                DATABASE=CSSOUTPUT;
-                                Network=DBMSSOCN")
-  RODBC::sqlSave(channel, data.frame(crt), tablename=
-      paste0('C_T_', target, '_bootylator_', rand_str(1), format(Sys.time(), '%m%d%Y')))
-  RODBC::odbcCloseAll()
+  # save bootystrap output to sql server CSSOUTPUT
+  # (this step is done during bootstrapping)
+  # rand_str <- function(n) {
+  #   do.call(paste0, replicate(7, sample(c(letters,letters,0:9), n, TRUE), FALSE))
+  # }
+  # channel <- RODBC::odbcDriverConnect("case=nochange;
+  #                               Description=CSSOUTPUT;
+  #                               DRIVER=SQL Server;
+  #                               SERVER=PITTAG_2016;
+  #                               UID=sa;
+  #                               PWD=frznool;
+  #                               WSID=CUTTHROAT;
+  #                               DATABASE=CSSOUTPUT;
+  #                               Network=DBMSSOCN")
+  # RODBC::sqlSave(channel, data.frame(crt), tablename=
+  #     paste0('C_T_', target, '_bootylator_', rand_str(1), format(Sys.time(), '%m%d%Y')))
+  # RODBC::odbcCloseAll()
 
   # write doCalcs output in csv file to working directory
-  nm <- paste("doCalcs ", target, format(Sys.time(), '%Y-%m-%d %H%M%S'),
-    " ", reaches, " reaches", ".csv", sep = "")
-  # ans$css_group<-css_group
+  nm<- paste("doCalcs_", target,
+    format(Sys.time(), '%Y-%m-%d %H%M%S'), ".csv", sep = "")
+
   write.table(ans, paste(nm, sep = "\\"),
     col.names = T, row.names = F, sep = ',', quote = F)
 
   # also send to clipboard
-  # write.table(ans,
-  #             'clipboard',
-  #             col.names = T, row.names = F, sep = ',',
-  #             quote = F)
+  # write.table(ans, 'clipboard', col.names = T, row.names = F, sep = ',', quote = F)
 
-  # save to sql server CSS report
+  # save to sql server CSSREPORT
   channel2 <- RODBC::odbcDriverConnect("case=nochange;
                                 Description=CSSREPORT;
                                 DRIVER=SQL Server;

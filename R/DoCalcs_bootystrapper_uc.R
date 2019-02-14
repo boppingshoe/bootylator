@@ -5,7 +5,7 @@
 #' @param crt Bootstrap output as input file here.
 #' @param target The name of the original input file (eg. SR HCH 2015 MCCA).
 #' @param css_group CSS group from the CSSGroups_LookupTable.
-#' @param makefile Save bootstrap output in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.
+#' @param makefile Append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.
 #' @return Survivals,detection, adult counts, and SARs...
 #' @examples
 #' ans<- doCalcs_uc(crt, target= 'CR_USK_2015_OKAN_MCJ', css_group= 'OKSR', makefile= 'y')
@@ -189,21 +189,22 @@ ans <- cbind(parm, ansDF)
 # option to save output to working directory and sql server
 if (makefile == 'y' | makefile == 'Y') {
   # save bootystrap output to sql server
-  rand_str <- function(n) {
-    do.call(paste0, replicate(7, sample(c(letters, letters, 0:9), n, TRUE), FALSE))
-  }
-  channel <- RODBC::odbcDriverConnect("case=nochange;
-    Description=CSSOUTPUT;
-    DRIVER=SQL Server;
-    SERVER=PITTAG_2016;
-    UID=sa;
-    PWD=frznool;
-    WSID=CUTTHROAT;
-    DATABASE=CSSOUTPUT;
-    Network=DBMSSOCN")
-  RODBC::sqlSave(channel, data.frame(crt), tablename=
-      paste0('C_T_', target, '_bootylator_', rand_str(1), format(Sys.time(), '%m%d%Y')))
-  RODBC::odbcCloseAll()
+  # (this step is done during bootstrapping)
+  # rand_str <- function(n) {
+  #   do.call(paste0, replicate(7, sample(c(letters, letters, 0:9), n, TRUE), FALSE))
+  # }
+  # channel <- RODBC::odbcDriverConnect("case=nochange;
+  #   Description=CSSOUTPUT;
+  #   DRIVER=SQL Server;
+  #   SERVER=PITTAG_2016;
+  #   UID=sa;
+  #   PWD=frznool;
+  #   WSID=CUTTHROAT;
+  #   DATABASE=CSSOUTPUT;
+  #   Network=DBMSSOCN")
+  # RODBC::sqlSave(channel, data.frame(crt), tablename=
+  #     paste0('C_T_', target, '_bootylator_', rand_str(1), format(Sys.time(), '%m%d%Y')))
+  # RODBC::odbcCloseAll()
 
   # write doCalcs output in csv file to working directory
   nm <- paste("doCalcs_uc ", target, format(Sys.time(), '%Y-%m-%d %H%M%S'),
@@ -213,10 +214,7 @@ if (makefile == 'y' | makefile == 'Y') {
     col.names = T, row.names = F, sep = ',', quote = F)
 
   # also send to clipboard
-  # write.table(ans,
-  #             'clipboard',
-  #             col.names = T, row.names = F, sep = ',',
-  #             quote = F)
+  # write.table(ans, 'clipboard', col.names = T, row.names = F, sep = ',', quote = F)
 
   # save to sql server CSS report
   channel2 <- RODBC::odbcDriverConnect("case=nochange;

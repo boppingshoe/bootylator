@@ -4,21 +4,18 @@
 \alias{doCalcs}
 \title{Take bootstrap output and return summary data for all annual report/web table for Snake River fish}
 \usage{
-doCalcs(crt, reaches = 6, species, target, css_group, makefile = "y",
-  ...)
+doCalcs(crt, species, target, css_group, makefile = "y", ...)
 }
 \arguments{
 \item{crt}{Bootstrap output as input file here.}
-
-\item{reaches}{Number of reach expansion. Default is 6.}
 
 \item{species}{"CH" if the species was Chinook. "ELSE" for all others.}
 
 \item{target}{The name of the original input file (eg. SR HCH 2015 MCCA).}
 
-\item{css_group}{CSS group from the CSSGroups_LookupTable.}
+\item{css_group}{CSS group from the CSSGroups_LookupTable. This identification is needed so the bootstrap report can be amended correctly to the SQL server CSSREPORT.}
 
-\item{makefile}{Save bootstrap output in CSSOUTPUT in SQL server, append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.}
+\item{makefile}{Append parameter output in CSSREPORT in SQL server, and make parameter output in csv file in working directory. Default is 'y'.}
 }
 \value{
 Survivals,detection, adult counts, and SARs...
@@ -27,6 +24,6 @@ Survivals,detection, adult counts, and SARs...
 Take bootstrap output and return summary data for all annual report/web table for Snake River fish
 }
 \examples{
-ans<- doCalcs(crt, reaches= 6, species= 'CH', target= 'SR HCH 2015 MCCA', css_group= 'MCCA', makefile= 'y')
+ans<- doCalcs(crt, species= 'CH', target= 'SR HCH 2015 MCCA', css_group= 'MCCA', makefile= 'y')
 format(ans, scientific= FALSE)
 }
