@@ -1,6 +1,6 @@
 
 .onAttach <- function(libname, pkgname) {
-  packageStartupMessage("Welcome to bootylator 0.4.3")
+  packageStartupMessage("Welcome to bootylator 1.4.4")
 }
 
 #' Import and format data for ready to use by \code{surv_calc()}
@@ -16,7 +16,7 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
   # importing data files ----
   yomama_in<- read.csv(file= file_name)#, na.strings= c('','NA'))
   if (sum(grepl('tag_id', names(yomama_in)))!= 1) {
-    stop('Data processing stopped.
+    stop ('Data processing stopped.
       Data column names missing.')
   }  # abort when columns have no names
 
@@ -29,7 +29,7 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
   if (ncol(yomama)== 7) { # should only have 7 columns
   names(yomama)<- c("tag_id","capture","boa","return","group","brood","rel_date")
   } else {
-    stop('Data processing stopped.
+    stop ('Data processing stopped.
       Data file contained both MCA_OBS and GRA_OBS
       (cannot distinguish between Snake and Columbia fish).')
   }
@@ -42,8 +42,8 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
     migyr<- mig_yr
   }
   if (migyr!= as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))) {
-    proceed<- readline('Migration year entered did not match the data file name. Proceed still (y/n)? ')
-    if (proceed== 'n') stop('Data processing stopped.')
+    stop ('Data processing stopped.
+      Migration year entered did not match the data file name.')
   } # check if migration match file name
 
   # create detection history ----
@@ -111,15 +111,14 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
         (n_occ+ 1):ncol(fdat)) ))
       fdat<- rbind( tmp23, subset(fdat,!(tag_id%in%badId23)) )
 
-      posi2<- apply(tmp23[, 1:n_occ], 1, function(x) grep('[23]', x))
-      qnable<- tmp23[as.numeric(substr(tmp23$capture, posi2+ 1, n_occ))!= 1, ]
-
-      if(nrow(qnable)> 0){
-        toshow<- readline(prompt= paste('I found', nrow(qnable),
-            'questionable fish. Would you like to see the list (y/shush)? '))
-        if(toshow== 'y') print(qnable[, c(paste0('occ', 1:n_occ),
-        'capture', 'tag_id', 'group', 'rel_date')], max.print= 1e+06)
-      }
+      # posi2<- apply(tmp23[, 1:n_occ], 1, function(x) grep('[23]', x))
+      # qnable<- tmp23[as.numeric(substr(tmp23$capture, posi2+ 1, n_occ))!= 1, ]
+      # if(nrow(qnable)> 0) {
+      #   toshow<- readline(prompt= paste('I found', nrow(qnable),
+      #       'questionable fish. Would you like to see the list (y/shush)? '))
+      #   if(toshow== 'y') print(qnable[, c(paste0('occ', 1:n_occ),
+      #   'capture', 'tag_id', 'group', 'rel_date')], max.print= 1e+06)
+      # } # Jerry said he's aware of this and requested supressing the message
     }
   }
 
