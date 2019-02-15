@@ -40,11 +40,11 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
     migyr<- as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))
   } else { # user set migration year
     migyr<- mig_yr
-  }
-  if (migyr!= as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))) {
-    stop ('Data processing stopped.
+    if (migyr!= as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))) {
+      stop ('Data processing stopped.
       Migration year entered did not match the data file name.')
-  } # check if migration match file name
+    } # check if migration match file name
+  }
 
   # create detection history ----
   n_occ<- nchar(yomama$capture[1])
