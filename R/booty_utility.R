@@ -25,9 +25,11 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
   yomama<- yomama_in[, c(grep('tag_id', names(yomama_in)),
     grep('capture', names(yomama_in))[1], grep('BOA_OBS', names(yomama_in)),
     grep('MCA_OBS', names(yomama_in)), grep('GRA_OBS', names(yomama_in)),
-    grep('flag', names(yomama_in)), grep('rel_date', names(yomama_in)))]
-  if (ncol(yomama)== 7) { # should only have 7 columns
-  names(yomama)<- c("tag_id","capture","boa","return","group","brood","rel_date")
+    grep('flag', names(yomama_in)), grep('rel_date', names(yomama_in)),
+    grep('migr_yr', names(yomama_in)))]
+  if (ncol(yomama)== 8) { # should only have 8 columns
+  names(yomama)<- c("tag_id","capture","boa","return",
+    "group","brood","rel_date","migyr")
   } else {
     stop ('Data processing stopped.
       Data file contained both MCA_OBS and GRA_OBS
@@ -36,13 +38,11 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
   if (any(names(yomama_in)== 'MCA_OBS')) {
     yomama$group<- 'T'
   }
-  if (mig_yr== 'auto') { # grab migration year from file name
-    migyr<- as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))
-  } else { # user set migration year
-    migyr<- mig_yr
-    if (migyr!= as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))) {
+  if (mig_yr!= 'auto') { # user input migration year
+    yomama$migyr<- mig_yr
+    if (mig_yr!= as.numeric(regmatches(file_name, regexpr("[0-9]...", file_name)))) {
       stop ('Data processing stopped.
-      Migration year entered did not match the data file name.')
+      Migration year entered did not match the name of data input file.')
     } # check if migration match file name
   }
 
@@ -60,6 +60,7 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
   fdat$capture<- yomama$capture
   fdat$tag_id<- yomama$tag_id
   fdat$group<- yomama$group
+  fdat$migyr<- yomama$migyr
 
   if(wgt=='y'){
     fdat$brood<- trimws(yomama$brood)
@@ -87,9 +88,9 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
     fdat$return<- as.Date(substr(yomama$return, 1, 10))
   }
   # age calculated using BOA_OBS (here is named 'boa')
-  fdat$age_boa<- as.numeric(format(fdat$boa, '%Y'))- migyr
+  fdat$age_boa<- as.numeric(format(fdat$boa, '%Y'))- fdat$migyr
   # age calculated using GRA_OBS or MCA_OBS (here is named 'return')
-  fdat$age_rtn<- as.numeric(format(fdat$return, '%Y'))- migyr
+  fdat$age_rtn<- as.numeric(format(fdat$return, '%Y'))- fdat$migyr
 
   # correct records with detection after 2 or 3 ----
   # (order will be altered after correction)
