@@ -1,6 +1,6 @@
 
 .onAttach <- function(libname, pkgname) {
-  packageStartupMessage("Welcome to bootylator 1.4.4")
+  packageStartupMessage("Welcome to bootylator 1.4.5")
 }
 
 #' Import and format data for ready to use by \code{surv_calc()}
@@ -14,7 +14,7 @@
 #'
 format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
   # importing data files ----
-  yomama_in<- read.csv(file= file_name)#, na.strings= c('','NA'))
+  yomama_in<- read.csv(file= file_name, colClasses=c("flag"= "factor"))
   if (sum(grepl('tag_id', names(yomama_in)))!= 1) {
     stop ('Data processing stopped.
       Data column names missing.')
@@ -597,7 +597,7 @@ bootystrapper<- function(d, fn, iter, wgt='n', wgt_init='n', phi_p_only='n', fpc
     out$rel_site<- d$rel_site[1]
     out$coord_id<- d$coord_id[1]
     colnames(out) <- c(paste0('phi', 1:(n_occ- 2)), paste0('p', 2:(n_occ- 1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'AD_R', 'AD_T', 'CW_R', 'CW_T', 'tag_site', 'rel_site', 'coord_id')
-  } else if(n_occ== 8) { # n_occ= 8 and not weighted
+  } else if(ncol(out)== 61) { # n_occ= 8 and not weighted
     out$tag_site<- d$tag_site[1]
     out$rel_site<- d$rel_site[1]
     out$coord_id<- d$coord_id[1]
