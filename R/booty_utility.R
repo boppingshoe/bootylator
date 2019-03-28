@@ -1,6 +1,6 @@
 
 .onAttach <- function(libname, pkgname) {
-  packageStartupMessage("Welcome to bootylator 1.4.5")
+  packageStartupMessage("Welcome to bootylator 1.4.6")
 }
 
 #' Import and format data for ready to use by \code{surv_calc()}
@@ -24,18 +24,18 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
   # GRA_OBS for snake, MCA_OBS for others
   yomama<- yomama_in[, c(grep('tag_id', names(yomama_in)),
     grep('capture', names(yomama_in))[1], grep('BOA_OBS', names(yomama_in)),
-    grep('MCA_OBS', names(yomama_in)), grep('GRA_OBS', names(yomama_in)),
+    grep('GRA_OBS', names(yomama_in)), grep('MCA_OBS', names(yomama_in)),
+    grep('WEL_OBS', names(yomama_in)), grep('RRF_OBS', names(yomama_in)),
     grep('flag', names(yomama_in)), grep('rel_date', names(yomama_in)),
     grep('migr_yr', names(yomama_in)))]
   if (ncol(yomama)== 8) { # should only have 8 columns
-  names(yomama)<- c("tag_id","capture","boa","return",
-    "group","brood","rel_date","migyr")
+  names(yomama)<- c("tag_id", "capture", "boa", "return",
+    "group", "brood", "rel_date", "migyr")
   } else {
     stop ('Data processing stopped.
-      Data file contained both MCA_OBS and GRA_OBS
-      (cannot distinguish between Snake and Columbia fish).')
+      Data file contained incorrect number of columns.')
   }
-  if (any(names(yomama_in)== 'MCA_OBS')) {
+  if (any(names(yomama_in)%in% c('MCA_OBS', 'WEL_OBS', 'RRF_OBS'))) {
     yomama$group<- 'T'
   }
   if (mig_yr!= 'auto') { # user input migration year
@@ -59,7 +59,7 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
   # fdat$capture<- apply(fdat[,1:n_occ], 1 , function(x) paste0(x, collapse=''))
   fdat$capture<- yomama$capture
   fdat$tag_id<- yomama$tag_id
-  fdat$group<- yomama$group
+  fdat$group<- trimws(yomama$group)
   fdat$migyr<- yomama$migyr
 
   if(wgt=='y'){
@@ -141,22 +141,22 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
 
   fdat$atx_rtn<- ifelse((fdat[, 2]== 2| fdat[, 3]== 2| fdat[, 4]== 2)&
       substr(fdat$capture, 2, (n_occ- 1))==
-      apply(fdat[, 2:(n_occ- 1)], 1, function(x) paste(x, collapse= ''))&
+      apply(cbind(fdat[, 2:(n_occ- 1)]), 1, function(x) paste(x, collapse= ''))&
       fdat$age_rtn> 1, 1, 0)
   fdat$atxj_rtn<- ifelse((fdat[ ,2]== 2| fdat[, 3]== 2| fdat[, 4]== 2)&
       substr(fdat$capture, 2, (n_occ- 1))==
-      apply(fdat[, 2:(n_occ- 1)], 1, function(x) paste(x, collapse= ''))&
+      apply(cbind(fdat[, 2:(n_occ- 1)]), 1, function(x) paste(x, collapse= ''))&
       fdat$age_rtn> 0, 1, 0)
 
   fdat$at0_rtn<- ifelse((fdat[, 2]== 2| fdat[, 3]== 2| fdat[, 4]== 2)&
       fdat[, 2]!= 1& fdat[, 3]!= 1& fdat[, 4]!= 1&
       substr(fdat$capture, 2, (n_occ- 1))==
-      apply(fdat[, 2:(n_occ- 1)], 1, function(x) paste(x, collapse= ''))&
+      apply(cbind(fdat[, 2:(n_occ- 1)]), 1, function(x) paste(x, collapse= ''))&
       fdat$age_rtn> 1, 1, 0)
   fdat$at0j_rtn<- ifelse((fdat[, 2]== 2| fdat[, 3]== 2| fdat[, 4]== 2)&
       fdat[, 2]!= 1& fdat[, 3]!= 1& fdat[, 4]!= 1&
       substr(fdat$capture, 2, (n_occ- 1))==
-      apply(fdat[, 2:(n_occ- 1)], 1, function(x) paste(x, collapse= ''))&
+      apply(cbind(fdat[, 2:(n_occ- 1)]), 1, function(x) paste(x, collapse= ''))&
       fdat$age_rtn> 0, 1, 0)
   # adult counts using BOA_OBS (aka 'boa')
   fdat$ac0_boa<- ifelse(fdat[, 2]== 0& fdat[, 3]== 0&
@@ -174,23 +174,23 @@ format_dat<- function(file_name, mig_yr= 'auto', wgt= 'n'){
       fdat$age_boa> 0, 1, 0)
 
   fdat$atx_boa<- ifelse((fdat[, 2]== 2| fdat[, 3]== 2| fdat[, 4]== 2)&
-      substr(fdat$capture, 2, (n_occ-1))==
-      apply(fdat[, 2:(n_occ- 1)], 1, function(x) paste(x, collapse= ''))&
+      substr(fdat$capture, 2, (n_occ- 1))==
+      apply(cbind(fdat[, 2:(n_occ- 1)]), 1, function(x) paste(x, collapse= ''))&
       fdat$age_boa> 1, 1, 0)
   fdat$atxj_boa<- ifelse((fdat[, 2]== 2| fdat[, 3]== 2| fdat[, 4]== 2)&
       substr(fdat$capture, 2, (n_occ- 1))==
-      apply(fdat[, 2:(n_occ- 1)], 1, function(x) paste(x, collapse= ''))&
+      apply(cbind(fdat[, 2:(n_occ- 1)]), 1, function(x) paste(x, collapse= ''))&
       fdat$age_boa> 0, 1, 0)
 
   fdat$at0_boa<- ifelse((fdat[, 2]== 2| fdat[, 3]== 2| fdat[, 4]== 2)&
       fdat[, 2]!= 1& fdat[, 3]!= 1& fdat[, 4]!= 1&
       substr(fdat$capture, 2, (n_occ- 1))==
-      apply(fdat[, 2:(n_occ- 1)], 1, function(x) paste(x, collapse= ''))&
+      apply(cbind(fdat[, 2:(n_occ- 1)]), 1, function(x) paste(x, collapse= ''))&
       fdat$age_boa>1, 1, 0)
   fdat$at0j_boa<- ifelse((fdat[, 2]== 2| fdat[, 3]== 2| fdat[, 4]== 2)&
       fdat[, 2]!= 1& fdat[, 3]!= 1& fdat[, 4]!= 1&
       substr(fdat$capture, 2, (n_occ- 1))==
-      apply(fdat[, 2:(n_occ- 1)], 1, function(x) paste(x, collapse= ''))&
+      apply(cbind(fdat[, 2:(n_occ- 1)]), 1, function(x) paste(x, collapse= ''))&
       fdat$age_boa> 0, 1, 0)
 
   fdat$c0type<- 0
@@ -285,9 +285,9 @@ surv_calc<- function(ch, i, nocc, wt, wt_i, phi_p_only, fpc, ...){
     nrow(subset(cht, occ3== 2 &
         as.numeric(substr(capture, 4 ,nocc- 1))== 0 &
         (age_rtn!= 0| is.na(age_rtn)))),
-    nrow(subset(cht, occ4== 2 &
+    ifelse(nocc> 3, nrow(subset(cht, occ4== 2 &
         as.numeric(substr(capture, 5, nocc- 1))== 0 &
-        (age_rtn!= 0| is.na(age_rtn)))),
+        (age_rtn!= 0| is.na(age_rtn)))), NA),
     ifelse(nocc> 4, nrow(subset(cht, occ5== 2 &
         as.numeric(substr(capture, 6, nocc- 1))== 0 &
         (age_rtn!= 0| is.na(age_rtn)))), NA)) # t group
@@ -430,9 +430,9 @@ mark_calc<- function(ch, i, nocc, wt, phi_p_only, logit_link='RMark', ...){
     nrow(subset(cht, occ3== 2 &
         as.numeric(substr(capture, 4,nocc- 1))== 0 &
         (age_rtn!= 0| is.na(age_rtn)))),
-    nrow(subset(cht, occ4== 2 &
+    ifelse(nocc> 3, nrow(subset(cht, occ4== 2 &
         as.numeric(substr(capture, 5, nocc- 1))== 0 &
-        (age_rtn!= 0| is.na(age_rtn)))),
+        (age_rtn!= 0| is.na(age_rtn)))), NA),
     ifelse(nocc> 4, nrow(subset(cht, occ5== 2 &
         as.numeric(substr(capture, 6, nocc- 1))== 0 &
         (age_rtn!= 0| is.na(age_rtn)))), NA)) # t group
@@ -602,7 +602,7 @@ bootystrapper<- function(d, fn, iter, wgt='n', wgt_init='n', phi_p_only='n', fpc
     out$rel_site<- d$rel_site[1]
     out$coord_id<- d$coord_id[1]
     colnames(out)<- c(paste0('phi', 1:(n_occ- 2)), paste0('p', 2:(n_occ- 1)), 'R1', 'R1t', 'm12', 'm13', 'm14', 'x12t', 'x1a2t', 'x1aa2t', 'x1aaa2t', 'x102t', 'x1002t', 'x10002t', 'd2t', 'd3t', 'd4t', 'd51t', 'd61t', 'd71t', 'd50', 'd60', 'd70', 'C0adult_rtn', 'C0adultj_rtn', 'C0adult_boa', 'C0adultj_boa', 'C0adult_t_rtn', 'C0adultj_t_rtn', 'C1adult_rtn', 'C1adultj_rtn', 'Txadult_rtn', 'Txadultj_rtn', 'T0adult_rtn', 'T0adultj_rtn', 'C0adult_t_boa', 'C0adultj_t_boa', 'C1adult_boa', 'C1adultj_boa', 'Txadult_boa', 'Txadultj_boa', 'T0adult_boa', 'T0adultj_boa', 'lgradult_rtn', 'lgsadult_rtn', 'lmnadult_rtn', 'lgradultj_rtn', 'lgsadultj_rtn', 'lmnadultj_rtn', 'R group', 'T group', 'tag_site', 'rel_site', 'coord_id')
-  } else { # n_occ= 4 or 6
+  } else { # n_occ= 3, 4 or 6
     out$tag_site<- d$tag_site[1]
     out$rel_site<- d$rel_site[1]
     out$coord_id<- d$coord_id[1]
