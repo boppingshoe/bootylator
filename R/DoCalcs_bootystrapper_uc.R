@@ -121,6 +121,7 @@ sar_rel_bj <-  totaladult_bj/r1
 sar_tws_cr_m <-  totaladult_m/(s1_cjs * r1)
 sar_tws_cr_mj <- totaladult_mj/(s1_cjs * r1)
 sar_rel_m <-  totaladult_m/r1
+sar_rel_mj <-  totaladult_mj/r1
 # ----
 
 #load up answers----------------------------------------------------------------
@@ -156,6 +157,8 @@ overallSAR_bj<- get.CIs(sar_tws_cr_bj* 100, exci='y',
 
 releaseSAR_m<- get.CIs(sar_rel_m* 100, exci='y',
   exactci, x= totaladult_m[1], n= r1[1])
+releaseSAR_mj<- get.CIs(sar_rel_mj* 100, exci='y',
+  exactci, x= totaladult_mj[1], n= r1[1])
 overallSAR_m<- get.CIs(sar_tws_cr_m* 100, exci='y',
   exactci, x= totaladult_m[1], n= (r1* s1_cjs)[1])
 overallSAR_mj<- get.CIs(sar_tws_cr_mj* 100, exci='y',
@@ -178,7 +181,7 @@ parm <- c(
 
           #overall SARs
           ,'releaseSAR_b','releaseSAR_bj','overallSAR_b', 'overallSAR_bj'
-          ,'releaseSAR_m','overallSAR_m', 'overallSAR_mj'
+          ,'releaseSAR_m','releaseSAR_mj','overallSAR_m', 'overallSAR_mj'
   )
 #
 ansDF <- get(parm[1])
